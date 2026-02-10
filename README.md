@@ -1,4 +1,4 @@
-# 🚀 Antigravity - Mobile Legends Scrim Matchmaking Engine
+# 🚀 goLobby - Mobile Legends Scrim Matchmaking Engine
 
 A production-ready, high-performance matchmaking system built with Go, featuring smart rank-based matching, real-time WebSocket notifications, and an advanced anti-ghosting system.
 
