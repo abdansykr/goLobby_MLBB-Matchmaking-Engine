@@ -1,0 +1,249 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Font Import - Gaming Style */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  body {
+    @apply bg-midnight-900 text-gray-100 font-['Rajdhani'] antialiased;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-['Orbitron'] font-bold tracking-wide;
+  }
+}
+
+@layer components {
+
+  /* Glassmorphism Card */
+  .glass-card {
+    @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-glass;
+    @apply border border-white/20 rounded-2xl;
+    @apply shadow-hexagon;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+    @apply hover:shadow-glow-violet hover:border-electric-violet-400/50;
+    @apply hover:scale-[1.02];
+  }
+
+  /* Hexagonal Elements */
+  .hexagon-border {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+
+  /* Magic Button */
+  .btn-magic {
+    @apply relative px-8 py-4 rounded-xl font-bold text-lg;
+    @apply bg-gradient-magic text-white;
+    @apply shadow-glow-violet;
+    @apply transition-all duration-300;
+    @apply hover:scale-105 hover:shadow-glow-cyan;
+    @apply active:scale-95;
+    @apply overflow-hidden;
+  }
+
+  .btn-magic::before {
+    content: '';
+    @apply absolute inset-0 bg-white/20;
+    @apply translate-x-[-100%];
+    @apply transition-transform duration-500;
+  }
+
+  .btn-magic:hover::before {
+    @apply translate-x-[100%];
+  }
+
+  /* Gold/Prestige Button */
+  .btn-gold {
+    @apply relative px-6 py-3 rounded-lg font-semibold;
+    @apply bg-gradient-gold text-midnight-900;
+    @apply shadow-glow-gold;
+    @apply transition-all duration-300;
+    @apply hover:scale-105;
+    @apply active:scale-95;
+  }
+
+  /* Danger/Decline Button */
+  .btn-danger {
+    @apply px-4 py-2 rounded-lg;
+    @apply bg-red-900/50 text-red-300 border border-red-700;
+    @apply hover:bg-red-800/70 hover:border-red-500;
+    @apply transition-all duration-200;
+  }
+
+  /* Stat Card with Glow */
+  .stat-card {
+    @apply glass-card p-6;
+    @apply relative overflow-hidden;
+  }
+
+  .stat-card::after {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1;
+    @apply bg-gradient-magic;
+  }
+
+  /* Progress Bar (Circular) */
+  .progress-ring {
+    @apply transition-all duration-500 ease-out;
+  }
+
+  /* Loading Spinner / Radar */
+  .radar-circle {
+    @apply absolute border-4 border-cyan-magic-400/30 rounded-full;
+    @apply animate-radar;
+  }
+
+  /* Modal Overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/80 backdrop-blur-sm;
+    @apply flex items-center justify-center;
+    @apply z-50;
+  }
+
+  /* VS Screen Typography */
+  .vs-text {
+    @apply font-['Orbitron'] text-8xl font-black;
+    @apply bg-gradient-magic bg-clip-text text-transparent;
+    filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.8));
+    @apply animate-pulse-slow;
+  }
+
+  /* Countdown Timer */
+  .timer-bar {
+    @apply h-2 rounded-full;
+    @apply bg-gradient-to-r from-cyan-magic-400 to-electric-violet-500;
+    @apply transition-all duration-1000 ease-linear;
+  }
+
+  .timer-bar.critical {
+    @apply from-orange-500 to-red-600;
+    @apply animate-pulse;
+  }
+
+  /* Avatar Hexagon Frame */
+  .avatar-hexagon {
+    @apply relative w-24 h-24;
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    @apply bg-gradient-magic p-1;
+  }
+
+  .avatar-hexagon img {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    @apply w-full h-full object-cover;
+  }
+
+  /* Rank Badge */
+  .rank-badge {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full;
+    @apply bg-gradient-gold text-midnight-900 font-bold;
+    @apply shadow-glow-gold;
+  }
+
+  /* Energy Border Effect */
+  .energy-border {
+    @apply relative;
+  }
+
+  .energy-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-xl;
+    @apply bg-gradient-magic opacity-0;
+    @apply transition-opacity duration-300;
+    @apply -z-10 blur-xl;
+  }
+
+  .energy-border:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Pulsing Portal Effect */
+  .portal-pulse {
+    @apply relative;
+  }
+
+  .portal-pulse::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    @apply bg-electric-violet-500/30;
+    @apply animate-ping;
+  }
+
+  /* Text Glow */
+  .text-glow {
+    text-shadow:
+      0 0 10px rgba(139, 92, 246, 0.8),
+      0 0 20px rgba(139, 92, 246, 0.5),
+      0 0 30px rgba(139, 92, 246, 0.3);
+  }
+
+  .text-glow-gold {
+    text-shadow:
+      0 0 10px rgba(212, 175, 55, 0.8),
+      0 0 20px rgba(212, 175, 55, 0.5);
+  }
+
+  /* Shimmer Effect for Loading */
+  .shimmer {
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+}
+
+@layer utilities {
+
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Gradient Text */
+  .gradient-text {
+    @apply bg-gradient-magic bg-clip-text text-transparent;
+  }
+
+  /* Glass Effect Utilities */
+  .glass {
+    @apply bg-white/10 backdrop-blur-glass;
+  }
+
+  .glass-strong {
+    @apply bg-white/15 backdrop-blur-xl;
+  }
+}
+
+/* Custom Scrollbar (for Chat) */
+.chat-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+  @apply bg-midnight-800 rounded-full;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+  @apply bg-electric-violet-500/50 rounded-full;
+  @apply hover:bg-electric-violet-400;
+}

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrim Matchmaking - Multi Test Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .clients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .client-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .client-card.searching {
+            border-color: #ffa726;
+            background: #fff3e0;
+        }
+
+        .client-card.matched {
+            border-color: #66bb6a;
+            background: #e8f5e9;
+        }
+
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .client-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-idle {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .status-searching {
+            background: #ffa726;
+            color: white;
+        }
+
+        .status-matched {
+            background: #66bb6a;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-cancel {
+            background: #f44336;
+            margin-top: 8px;
+        }
+
+        .status-log {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-success {
+            color: #4caf50;
+        }
+
+        .log-error {
+            color: #f44336;
+        }
+
+        .log-info {
+            color: #2196f3;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .controls button {
+            width: auto;
+            padding: 12px 30px;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎮 Scrim Matchmaking Tester</h1>
+        <p class="subtitle">Multi-Client Testing Tool - Open in Multiple Tabs</p>
+
+        <div class="controls">
+            <button onclick="autoFillAll()">Auto-Fill Random Data</button>
+            <button onclick="searchAll()">Search All</button>
+            <button onclick="cancelAll()">Cancel All</button>
+        </div>
+
+        <div class="clients-grid">
+            <!-- Client 1 -->
+            <div class="client-card" id="card-1">
+                <div class="client-header">
+                    <div class="client-title">Client 1</div>
+                    <span class="status-badge status-idle" id="status-1">IDLE</span>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category-1">
+                        <option value="POKE">POKE (Ranked Solo)</option>
+                        <option value="WARKOP">WARKOP (Pro Scrim)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" id="teamName-1" placeholder="Team Alpha">
+                </div>
+                <div class="form-group" id="captainGroup-1" style="display:none;">
+                    <label>Captain Name (WARKOP only)</label>
+                    <input type="text" id="captainName-1" placeholder="Captain 1">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="tel" id="whatsapp-1" placeholder="628123456789">
+                </div>
+                <div class="form-group" id="rankGroup-1">
+                    <label>Rank (POKE only)</label>
+                    <select id="rankWeight-1">
+                        <option value="5">5 - Epic</option>
+                        <option value="6">6 - Legend</option>
+                        <option value="7">7 - Mythic</option>
+                    </select>
+                </div>
+                <button onclick="startSearch(1)">Find Match</button>
+                <button class="btn-cancel" onclick="cancelSearch(1)" style="display:none;"
+                    id="cancelBtn-1">Cancel</button>
+                <div class="status-log" id="log-1"></div>
+            </div>
+
+            <!-- Client 2 -->
+            <div class="client-card" id="card-2">
+                <div class="client-header">
+                    <div class="client-title">Client 2</div>
+                    <span class="status-badge status-idle" id="status-2">IDLE</span>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category-2">
+                        <option value="POKE">POKE (Ranked Solo)</option>
+                        <option value="WARKOP">WARKOP (Pro Scrim)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Team Name</label>
+                    <input type="text" id="teamName-2" placeholder="Team Beta">
+                </div>
+                <div class="form-group" id="captainGroup-2" style="display:none;">
+                    <label>Captain Name (WARKOP only)</label>
+                    <input type="text" id="captainName-2" placeholder="Captain 2">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="tel" id="whatsapp-2" placeholder="628987654321">
+                </div>
+                <div class="form-group" id="rankGroup-2">
+                    <label>Rank (POKE only)</label>
+                    <select id="rankWeight-2">
+                        <option value="5">5 - Epic</option>
+                        <option value="6">6 - Legend</option>
+                        <option value="7">7 - Mythic</option>
+                    </select>
+                </div>
+                <button onclick="startSearch(2)">Find Match</button>
+                <button class="btn-cancel" onclick="cancelSearch(2)" style="display:none;"
+                    id="cancelBtn-2">Cancel</button>
+                <div class="status-log" id="log-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        const clients = {};
+
+        // Category change handlers
+        for (let i = 1; i <= 2; i++) {
+            document.getElementById(`category-${i}`).addEventListener('change', (e) => {
+                updateCategoryFields(i, e.target.value);
+            });
+        }
+
+        function updateCategoryFields(id, category) {
+            const captainGroup = document.getElementById(`captainGroup-${id}`);
+            const rankGroup = document.getElementById(`rankGroup-${id}`);
+
+            if (category === 'WARKOP') {
+                captainGroup.style.display = 'block';
+                rankGroup.style.display = 'none';
+            } else {
+                captainGroup.style.display = 'none';
+                rankGroup.style.display = 'block';
+            }
+        }
+
+        function log(clientId, message, type = 'info') {
+            const logEl = document.getElementById(`log-${clientId}`);
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEl.insertBefore(entry, logEl.firstChild);
+
+            // Keep only last 5 entries
+            while (logEl.childElementCount > 5) {
+                logEl.removeChild(logEl.lastChild);
+            }
+        }
+
+        function updateStatus(clientId, status) {
+            const badge = document.getElementById(`status-${clientId}`);
+            const card = document.getElementById(`card-${clientId}`);
+
+            badge.className = 'status-badge';
+            card.className = 'client-card';
+
+            switch (status) {
+                case 'searching':
+                    badge.classList.add('status-searching');
+                    badge.textContent = 'SEARCHING';
+                    card.classList.add('searching');
+                    break;
+                case 'matched':
+                    badge.classList.add('status-matched');
+                    badge.textContent = 'MATCHED';
+                    card.classList.add('matched');
+                    break;
+                default:
+                    badge.classList.add('status-idle');
+                    badge.textContent = 'IDLE';
+            }
+        }
+
+        async function startSearch(clientId) {
+            const category = document.getElementById(`category-${clientId}`).value;
+            const teamName = document.getElementById(`teamName-${clientId}`).value;
+            const whatsapp = document.getElementById(`whatsapp-${clientId}`).value;
+
+            if (!teamName || !whatsapp) {
+                log(clientId, 'Please fill required fields!', 'error');
+                return;
+            }
+
+            const payload = {
+                teamName,
+                whatsappNumber: whatsapp,
+                category
+            };
+
+            if (category === 'WARKOP') {
+                const captainName = document.getElementById(`captainName-${clientId}`).value;
+                if (!captainName) {
+                    log(clientId, 'Captain name required for WARKOP!', 'error');
+                    return;
+                }
+                payload.captainName = captainName;
+                payload.rankWeight = '10';
+            } else {
+                payload.rankWeight = document.getElementById(`rankWeight-${clientId}`).value;
+            }
+
+            try {
+                log(clientId, 'Sending request...', 'info');
+                const response = await fetch(`${API_URL}/api/scrim/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    clients[clientId] = {
+                        requestId: data.request_id,
+                        pollInterval: null
+                    };
+
+                    log(clientId, `Request created: ${data.request_id.substring(0, 8)}...`, 'success');
+                    updateStatus(clientId, 'searching');
+                    document.getElementById(`cancelBtn-${clientId}`).style.display = 'block';
+
+                    // Start polling
+                    startPolling(clientId);
+                } else {
+                    log(clientId, `Error: ${data.error || data.message}`, 'error');
+                }
+            } catch (error) {
+                log(clientId, `Connection error: ${error.message}`, 'error');
+            }
+        }
+
+        function startPolling(clientId) {
+            const client = clients[clientId];
+            if (!client) return;
+
+            client.pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_URL}/api/scrim/request/${client.requestId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'matched') {
+                        clearInterval(client.pollInterval);
+                        updateStatus(clientId, 'matched');
+                        log(clientId, `MATCH FOUND! vs ${data.match.opponent_name}`, 'success');
+                        log(clientId, `WhatsApp: ${data.match.whatsapp_url}`, 'info');
+                        document.getElementById(`cancelBtn-${clientId}`).style.display = 'none';
+                    } else if (data.status === 'expired') {
+                        clearInterval(client.pollInterval);
+                        updateStatus(clientId, 'idle');
+                        log(clientId, 'Request expired', 'error');
+                        document.getElementById(`cancelBtn-${clientId}`).style.display = 'none';
+                    }
+                } catch (error) {
+                    log(clientId, `Poll error: ${error.message}`, 'error');
+                }
+            }, 2000);
+        }
+
+        async function cancelSearch(clientId) {
+            const client = clients[clientId];
+            if (!client) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/scrim/request/${client.requestId}/cancel`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    clearInterval(client.pollInterval);
+                    delete clients[clientId];
+                    updateStatus(clientId, 'idle');
+                    log(clientId, 'Search cancelled', 'info');
+                    document.getElementById(`cancelBtn-${clientId}`).style.display = 'none';
+                }
+            } catch (error) {
+                log(clientId, `Cancel error: ${error.message}`, 'error');
+            }
+        }
+
+        function autoFillAll() {
+            const names = ['Team Alpha', 'Team Beta', 'Team Gamma', 'Team Delta'];
+            const phones = ['628111111111', '628222222222', '628333333333', '628444444444'];
+            const captains = ['Captain Alpha', 'Captain Beta'];
+
+            for (let i = 1; i <= 2; i++) {
+                const randomCat = Math.random() > 0.5 ? 'POKE' : 'WARKOP';
+                document.getElementById(`category-${i}`).value = randomCat;
+                document.getElementById(`teamName-${i}`).value = names[i - 1];
+                document.getElementById(`whatsapp-${i}`).value = phones[i - 1];
+
+                updateCategoryFields(i, randomCat);
+
+                if (randomCat === 'WARKOP') {
+                    document.getElementById(`captainName-${i}`).value = captains[i - 1];
+                } else {
+                    document.getElementById(`rankWeight-${i}`).value = '5';
+                }
+            }
+
+            console.log('Auto-filled all clients with random data');
+        }
+
+        function searchAll() {
+            for (let i = 1; i <= 2; i++) {
+                startSearch(i);
+            }
+        }
+
+        function cancelAll() {
+            for (let i = 1; i <= 2; i++) {
+                cancelSearch(i);
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            for (let id in clients) {
+                if (clients[id].pollInterval) {
+                    clearInterval(clients[id].pollInterval);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
