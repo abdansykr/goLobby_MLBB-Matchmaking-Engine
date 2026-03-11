@@ -1,0 +1,74 @@
+name: GoLobby CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ─────────────────────────────────────────────────────────
+  # TAHAP 1: CONTINUOUS INTEGRATION (Pengujian Logika & Build)
+  # ─────────────────────────────────────────────────────────
+  continuous-integration:
+    name: Lint, Test & Build Verification
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Mengambil kode sumber dari repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup environment Go sesuai dengan versi proyek (1.23)
+      - name: Setup Go environment
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.8'
+          cache: true
+
+      # 3. Validasi kode menggunakan unit test golang
+      - name: Run Go Unit Tests
+        run: |
+          echo "Menjalankan Test Logika Matchmaking (Poke & Warkop)..."
+          go test -v ./...
+
+      # 4. Melakukan simulasi build Docker Compose untuk memastikan 
+      #    tidak ada sintaks Dockerfile yang rusak
+      - name: Verify Docker Compose Build
+        run: |
+          echo "Memverifikasi konfigurasi kontainer..."
+          docker compose build
+
+  # ─────────────────────────────────────────────────────────
+  # TAHAP 2: CONTINUOUS DEPLOYMENT (Upload ke VPS Production)
+  # ─────────────────────────────────────────────────────────
+  continuous-deployment:
+    name: Deploy to Production VPS
+    needs: continuous-integration # Wajib menunggu CI sukses
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && success()
+    
+    steps:
+      # Terhubung ke server VPS lewat SSH secara aman dan mengeksekusi script
+      - name: Execute Remote SSH Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Pastikan variabel direktori di bawah sesuai dengan folder asli VPS mu
+          script: |
+            echo "🚀 Memulai Deployment GoLobby..."
+            
+            # 1. Masuk ke folder root aplikasi
+            # PERHATIAN: Ubah '/var/www/goLobby' ini dengan direktori proyekmu di server
+            cd /var/www/goLobby || { echo "Direktori tidak ditemukan!"; exit 1; }
+            
+            # 2. Buang perubahan lokal di server & tarik update GitHub terbaru
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # 3. Bangun ulang image dan jalankan service di belakang layar (detached)
+            # Docker cerdas akan menindih kontainer lama hanya sesudah yang baru siap
+            docker compose up -d --build
+            
+            echo "✅ Deployment Selesai!"

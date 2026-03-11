@@ -9,46 +9,59 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/websocket/v2"
 	"github.com/golobby/matchmaking/internal/config"
 	"github.com/golobby/matchmaking/internal/database"
-	"github.com/golobby/matchmaking/internal/delivery/http"
+	httpHandler "github.com/golobby/matchmaking/internal/delivery/http"
+	appLogger "github.com/golobby/matchmaking/internal/logger"
 	"github.com/golobby/matchmaking/internal/repository"
 	"github.com/golobby/matchmaking/internal/usecase"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/valyala/fasthttp/fasthttpadaptor"
 )
 
 func main() {
-	// Load configuration
+	// ── Configuration ──────────────────────────────────────────────────
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	log.Println("🚀 Starting GoLobby Matchmaking Engine...")
-	log.Printf("Environment: %s", cfg.AppEnv)
+	// ── Structured Logger ──────────────────────────────────────────────
+	appLogger.Init(cfg.AppEnv)
+	defer appLogger.Sync()
 
-	// Initialize PostgreSQL
+	appLogger.Info("🚀 Starting GoLobby Matchmaking Engine (Phase 2)",
+		"env", cfg.AppEnv,
+		"port", cfg.AppPort,
+	)
+
+	// ── PostgreSQL ─────────────────────────────────────────────────────
 	db, err := database.NewPostgresDB(cfg.GetDatabaseDSN())
 	if err != nil {
-		log.Fatalf("Failed to connect to PostgreSQL: %v", err)
+		appLogger.Fatal("Failed to connect to PostgreSQL: %v", err)
 	}
 	defer db.Close()
 
-	// Initialize Redis
+	// ── Redis ──────────────────────────────────────────────────────────
 	redisClient, err := database.NewRedisClient(cfg.GetRedisAddr(), cfg.Redis.Password)
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		appLogger.Fatal("Failed to connect to Redis: %v", err)
 	}
 	defer redisClient.Close()
+	appLogger.Info("✅ Redis connected", "addr", cfg.GetRedisAddr())
 
-	// Initialize repositories
-	teamRepo := repository.NewPostgresTeamRepository(db)
-	matchRepo := repository.NewPostgresMatchRepository(db)
-	cacheRepo := repository.NewRedisCache(redisClient)
+	// ── Repositories ───────────────────────────────────────────────────
+	teamRepo         := repository.NewPostgresTeamRepository(db)
+	matchRepo        := repository.NewPostgresMatchRepository(db)
+	cacheRepo        := repository.NewRedisCache(redisClient)
+	scrimRequestRepo := repository.NewScrimRequestRepository(db)
+	scrimMatchRepo   := repository.NewScrimMatchRepository(db)
+	rateLimiter      := repository.NewRedisRateLimiter(redisClient)
 
-	// Initialize usecase
+	// ── Matchmaking Usecase ────────────────────────────────────────────
 	matchmakingConfig := usecase.MatchmakingConfig{
 		InitialRankRange:  cfg.Matchmaking.InitialRankRange,
 		ExtendedRankRange: cfg.Matchmaking.ExtendedRankRange,
@@ -56,43 +69,26 @@ func main() {
 		ReadyTimeout:      cfg.Matchmaking.ReadyTimeout,
 		GhostingPenalty:   cfg.Reputation.GhostingPenalty,
 	}
-
 	matchmakingUsecase := usecase.NewMatchmakingUsecase(
-		teamRepo,
-		matchRepo,
-		cacheRepo,
-		matchmakingConfig,
+		teamRepo, matchRepo, cacheRepo, matchmakingConfig,
 	)
-
-	// Start matchmaking workers (4 workers by default)
 	matchmakingUsecase.StartMatchmakingWorkers(4)
 	defer matchmakingUsecase.StopMatchmakingWorkers()
 
-	// Initialize Scrim repositories (NEW)
-	scrimRequestRepo := repository.NewScrimRequestRepository(db)
-	scrimMatchRepo := repository.NewScrimMatchRepository(db)
-	rateLimiter := repository.NewRedisRateLimiter(redisClient)
-
-	// Initialize Scrim usecase (NEW)
+	// ── Scrim Usecase ──────────────────────────────────────────────────
 	scrimUsecase := usecase.NewScrimMatchmakingUsecase(
-		scrimRequestRepo,
-		scrimMatchRepo,
-		rateLimiter,
-		4, // 4 workers for scrim matching
+		scrimRequestRepo, scrimMatchRepo, rateLimiter, 4,
 	)
-
-	// Start scrim matchmaking workers (NEW)
 	scrimUsecase.Start()
 	defer scrimUsecase.Stop()
 
-	// Initialize WebSocket hub
-	wsHub := http.NewWebSocketHub()
+	// ── WebSocket Hub ──────────────────────────────────────────────────
+	wsHub := httpHandler.NewWebSocketHub()
 
-	// Start broadcast relay (from usecase to WebSocket clients)
+	// Relay matchmaking events → WebSocket clients
 	go func() {
 		for msg := range matchmakingUsecase.GetBroadcastChannel() {
-			// Relay to WebSocket hub
-			hubMsg := &http.BroadcastMessage{
+			hubMsg := &httpHandler.BroadcastMessage{
 				Type:      msg.Type,
 				TeamID:    msg.TeamID,
 				MatchID:   msg.MatchID,
@@ -103,69 +99,85 @@ func main() {
 		}
 	}()
 
-	// Initialize handler
-	handler := http.NewMatchmakingHandler(matchmakingUsecase, wsHub)
+	// ── Handlers ───────────────────────────────────────────────────────
+	matchmakingHandler := httpHandler.NewMatchmakingHandler(matchmakingUsecase, wsHub)
+	scrimHandler       := httpHandler.NewScrimHandler(scrimUsecase, wsHub)
+	ocrHandler         := httpHandler.NewOCRHandler(wsHub)
 
-	// Initialize Scrim handler
-	scrimHandler := http.NewScrimHandler(scrimUsecase, wsHub)
-
-	// Initialize Fiber app
+	// ── Fiber App ──────────────────────────────────────────────────────
 	app := fiber.New(fiber.Config{
-		AppName:      "GoLobby Matchmaking",
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		AppName:      "GoLobby Matchmaking v2",
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
 	})
 
 	// Middleware
 	app.Use(recover.New())
-	app.Use(logger.New(logger.Config{
-		Format: "[${time}] ${status} - ${latency} ${method} ${path}\n",
+	app.Use(fiberLogger.New(fiberLogger.Config{
+		Format: `{"time":"${time}","status":${status},"latency":"${latency}","method":"${method}","path":"${path}"}` + "\n",
 	}))
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
-		AllowMethods: "GET,POST,PUT,DELETE",
-		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-OCR-Secret",
 	}))
 
-	// Health check
-	app.Get("/health", handler.HealthCheck)
+	// ── Routes ─────────────────────────────────────────────────────────
+	app.Get("/health", matchmakingHandler.HealthCheck)
 
-	// API routes
 	api := app.Group("/api")
 
-	// Matchmaking routes
 	matchmaking := api.Group("/matchmaking")
-	matchmaking.Post("/enqueue", handler.EnqueueTeam)
-	matchmaking.Post("/ready", handler.ConfirmReady)
-	matchmaking.Post("/cancel", handler.CancelMatchmaking)
+	matchmaking.Post("/enqueue", matchmakingHandler.EnqueueTeam)
+	matchmaking.Post("/ready",   matchmakingHandler.ConfirmReady)
+	matchmaking.Post("/cancel",  matchmakingHandler.CancelMatchmaking)
 
-	// Scrim routes
-	http.RegisterScrimRoutes(app, scrimHandler)
+	httpHandler.RegisterScrimRoutes(app, scrimHandler)
+	httpHandler.RegisterOCRRoutes(app, ocrHandler)
 
-	// WebSocket route
-	app.Get("/ws", websocket.New(handler.WebSocketHandler))
+	// WebSocket upgrade
+	app.Use("/ws", func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+	app.Get("/ws", websocket.New(matchmakingHandler.WebSocketHandler))
 
-	// Start server in a goroutine
+	// ── Prometheus Metrics Server (separate port) ──────────────────────
+	metricsPort := os.Getenv("METRICS_PORT")
+	if metricsPort == "" {
+		metricsPort = "2112"
+	}
 	go func() {
-		addr := ":" + cfg.AppPort
-		log.Printf("🌐 Server starting on %s", addr)
-		if err := app.Listen(addr); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
+		metricsApp := fiber.New(fiber.Config{DisableStartupMessage: true})
+		metricsApp.Get("/metrics", func(c *fiber.Ctx) error {
+			fasthttpadaptor.NewFastHTTPHandler(promhttp.Handler())(c.Context())
+			return nil
+		})
+		appLogger.Info("📊 Prometheus metrics listening", "port", metricsPort)
+		if err := metricsApp.Listen(":" + metricsPort); err != nil {
+			appLogger.Error("Metrics server error", "err", err)
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server
+	// ── Start Main Server ──────────────────────────────────────────────
+	go func() {
+		addr := ":" + cfg.AppPort
+		appLogger.Info("🌐 HTTP server starting", "addr", addr)
+		if err := app.Listen(addr); err != nil {
+			appLogger.Fatal("Failed to start server: %v", err)
+		}
+	}()
+
+	// ── Graceful Shutdown ──────────────────────────────────────────────
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("📴 Shutting down gracefully...")
-
-	// Shutdown server
+	appLogger.Info("📴 Shutting down gracefully...")
 	if err := app.Shutdown(); err != nil {
-		log.Printf("Server shutdown error: %v", err)
+		appLogger.Error("Server shutdown error", "err", err)
 	}
-
-	log.Println("👋 Server stopped")
+	appLogger.Info("👋 Server stopped")
 }
-

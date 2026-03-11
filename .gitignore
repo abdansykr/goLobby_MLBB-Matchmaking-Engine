@@ -1,18 +1,19 @@
-# Binaries
+# Binaries & Executables
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 matchmaking
+bin/
 
-# Test binary, built with `go test -c`
+# Go Specifics
 *.test
-
-# Output of the go coverage tool
 *.out
+go.work
+go.work.sum
 
-# Dependency directories
+# Dependencies (Sangat Penting)
 vendor/
 node_modules/
 frontend/node_modules/
@@ -20,40 +21,42 @@ dist/
 frontend/dist/
 build/
 coverage/
+.pnpm-debug.log*
 
-# Go workspace file
-go.work
+# Python (OCR Microservice)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
 
-# Environment variables
+# Environment Variables (Keamanan)
+.env
 .env.local
 .env.production
-.env    
+.env.development
 
-# IDE
+# IDE & Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# OS Junk
 .DS_Store
 Thumbs.db
 
-# Docker
+# Docker & Logs
 *.log
+docker-compose.override.yml
 
-# Database
+# Database & Persistent Data
 *.db
 *.sqlite
+postgres_data/
+redis_data/
 
-# Testing
-scrim-test-client.html
-test-scrim-client.html
+# Testing Temporary Files
 *-test-client.html
-*.test.html
 debug/
 tmp/
-
-# Documentation
-Documentation/

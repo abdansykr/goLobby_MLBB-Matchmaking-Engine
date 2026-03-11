@@ -1,0 +1,340 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 10,
+            "title": "Matchmaking",
+            "type": "row"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 10
+                            },
+                            {
+                                "color": "red",
+                                "value": 50
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 1
+            },
+            "id": 1,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "orientation": "auto",
+                "textMode": "auto",
+                "graphMode": "area"
+            },
+            "title": "Queue Size (POKE)",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "golobby_matchmaking_queue_size{category=\"POKE\"}",
+                    "legendFormat": "POKE Queue"
+                }
+            ]
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 10
+                            },
+                            {
+                                "color": "red",
+                                "value": 50
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 1
+            },
+            "id": 2,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                },
+                "orientation": "auto",
+                "textMode": "auto",
+                "graphMode": "area"
+            },
+            "title": "Queue Size (WARKOP)",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "golobby_matchmaking_queue_size{category=\"WARKOP\"}",
+                    "legendFormat": "WARKOP Queue"
+                }
+            ]
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 1
+            },
+            "id": 3,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "sum"
+                    ]
+                }
+            },
+            "title": "Total Matches Found",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "sum(golobby_matchmaking_match_found_total)",
+                    "legendFormat": "Matches"
+                }
+            ]
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 1
+            },
+            "id": 4,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ]
+                }
+            },
+            "title": "Active WebSocket Connections",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "golobby_websocket_connections_active",
+                    "legendFormat": "WS Connections"
+                }
+            ]
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "s",
+                    "custom": {
+                        "lineWidth": 2
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 5
+            },
+            "id": 5,
+            "title": "Match Search Latency (p50 / p95 / p99)",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.50, rate(golobby_matchmaking_search_latency_seconds_bucket[5m]))",
+                    "legendFormat": "p50"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, rate(golobby_matchmaking_search_latency_seconds_bucket[5m]))",
+                    "legendFormat": "p95"
+                },
+                {
+                    "expr": "histogram_quantile(0.99, rate(golobby_matchmaking_search_latency_seconds_bucket[5m]))",
+                    "legendFormat": "p99"
+                }
+            ]
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 5
+            },
+            "id": 6,
+            "title": "Match Rate (per minute)",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "rate(golobby_matchmaking_match_found_total[1m]) * 60",
+                    "legendFormat": "{{category}}"
+                }
+            ]
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 13
+            },
+            "id": 11,
+            "title": "OCR & Anti-Fraud",
+            "type": "row"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 0,
+                "y": 14
+            },
+            "id": 7,
+            "title": "OCR Verifications (24h)",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "sum by (result) (increase(golobby_ocr_verification_total[24h]))",
+                    "legendFormat": "{{result}}"
+                }
+            ]
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ms"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 8,
+                "y": 14
+            },
+            "id": 8,
+            "title": "OCR Processing Latency (p95)",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, rate(golobby_ocr_processing_latency_seconds_bucket[5m])) * 1000",
+                    "legendFormat": "p95 ms"
+                }
+            ]
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short"
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 16,
+                "y": 14
+            },
+            "id": 9,
+            "title": "Reputation Penalties (24h)",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "sum by (type) (increase(golobby_reputation_penalties_total[24h]))",
+                    "legendFormat": "{{type}}"
+                }
+            ]
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 38,
+    "tags": [
+        "golobby",
+        "matchmaking"
+    ],
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "title": "GoLobby Matchmaking Dashboard",
+    "uid": "golobby-matchmaking-v2",
+    "version": 1
+}

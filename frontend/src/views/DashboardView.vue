@@ -1,6 +1,27 @@
 <template>
-  <div class="min-h-screen pb-10 px-4">
-    <div class="container mx-auto max-w-6xl">
+  <div class="min-h-screen pb-10 px-4 relative overflow-hidden">
+    <!-- TRON BACKGROUND LINES -->
+    <div class="fixed inset-0 pointer-events-none -z-10 bg-grid-cyan opacity-10"></div>
+    
+    <!-- TOAST NOTIFICATIONS -->
+    <div class="fixed top-4 right-4 z-[100] flex flex-col gap-3">
+      <transition-group name="toast">
+        <div v-for="toast in toasts" :key="toast.id" 
+             :class="[
+               'px-6 py-4 rounded-xl border shadow-2xl backdrop-blur-md flex items-center gap-3 w-80',
+               toast.type === 'error' ? 'bg-red-900/40 border-red-500/50 text-red-100 shadow-red-500/20' : 
+               toast.type === 'success' ? 'bg-green-900/40 border-green-500/50 text-green-100 shadow-green-500/20' :
+               'bg-yellow-900/40 border-yellow-500/50 text-yellow-100 shadow-yellow-500/20'
+             ]">
+          <div v-html="toast.icon" class="flex-shrink-0"></div>
+          <div class="flex-1 font-medium text-sm leading-tight">{{ toast.message }}</div>
+          <button @click="removeToast(toast.id)" class="opacity-50 hover:opacity-100">×</button>
+        </div>
+      </transition-group>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container mx-auto max-w-6xl relative z-10">
       <!-- Logo Header removed - moved to Navbar -->
 
       <!-- Hero Section -->
@@ -160,7 +181,7 @@
                     />
                   </div>
 
-                  <!-- WhatsApp --">
+                  <!-- WhatsApp -->
                   <div>
                     <label class="block text-sm text-gray-400 mb-2 font-medium">WhatsApp Number</label>
                     <input 
@@ -365,7 +386,7 @@
 
         <!-- Live Server Status Sidebar -->
         <div class="lg:col-span-1">
-          <div class="glass-card p-6 sticky top-24 border border-white/5 backdrop-blur-2xl bg-midnight-900/30">
+          <div class="glass-card p-6 sticky top-6 h-fit border border-white/5 backdrop-blur-2xl bg-midnight-900/30">
             <!-- Header with Live Indicator -->
             <div class="flex items-center justify-between mb-6">
               <h4 class="text-lg font-bold flex items-center gap-3">
@@ -396,7 +417,9 @@
                     </svg>
                   </div>
                   <div>
-                    <div class="text-2xl font-black text-cyan-magic-300 animate-pulse font-['Orbitron'] tracking-wider">< 30s</div>
+                    <div class="text-2xl font-black text-cyan-magic-300 font-['Orbitron'] tracking-wider transition-all duration-300">
+                      < {{ liveStats.waitTime }}s
+                    </div>
                     <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Avg Wait Time</div>
                   </div>
                 </div>
@@ -404,7 +427,7 @@
 
               <!-- Rank Tolerance -->
               <div class="glass bg-black/20 p-4 rounded-xl flex items-center gap-4 border border-electric-violet-500/10 hover:border-electric-violet-500/30 transition-all duration-500 hover:shadow-[0_0_20px_rgba(139,92,246,0.1)]">
-                <div class="p-3 rounded-full bg-electric-violet-500/10 shadow-[0_0_10px_rgba(139,92,246,0.15)]">
+                <div class="p-3 rounded-full bg-electric-violet-500/10 shadow-[0_0_10px_rgba(139,92,246,0.15)] pulse-ring-violet">
                   <!-- Medal/Rank Icon -->
                   <svg class="w-6 h-6 text-electric-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -425,7 +448,7 @@
                   </svg>
                 </div>
                 <div>
-                  <div class="text-2xl font-black text-antique-gold-400 animate-pulse font-['Orbitron'] tracking-wider">60s</div>
+                  <div class="text-2xl font-black text-antique-gold-400 font-['Orbitron'] tracking-wider transition-all duration-300">{{ liveStats.confirm }}s</div>
                   <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Confirm Time</div>
                 </div>
               </div>
@@ -480,49 +503,30 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useScrimAPI } from '@/composables/useScrimAPI'
 import MatchFoundModal from '@/components/MatchFoundModal.vue'
+import SearchingState from '@/components/SearchingState.vue'
 
-// Searching State Component (Inline)
-const SearchingState = {
-  props: ['formData'],
-  emits: ['cancel'],
-  setup(props, { emit }) {
-    const estimatedTime = ref(30)
-    
-    return { estimatedTime }
-  },
-  template: `
-    <div class="space-y-8 py-8">
-      <div class="relative w-64 h-64 mx-auto">
-        <div class="radar-circle inset-0"></div>
-        <div class="radar-circle inset-8" style="animation-delay: 0.5s"></div>
-        <div class="radar-circle inset-16" style="animation-delay: 1s"></div>
-        <div class="absolute inset-0 flex items-center justify-center">
-          <div class="w-20 h-20 rounded-full bg-cyan-magic-400 animate-ping"></div>
-          <div class="absolute w-16 h-16 rounded-full bg-cyan-magic-500 shadow-glow-cyan"></div>
-        </div>
-      </div>
-      <div class="text-center space-y-4">
-        <h3 class="text-3xl font-bold text-glow animate-pulse">Searching for Opponents...</h3>
-        <p class="text-gray-400 text-lg">
-          Mode: <span class="text-cyan-magic-300 font-bold">{{ formData.category === 'POKE' ? 'Ranked Solo' : 'Pro Scrim' }}</span>
-        </p>
-        <p class="text-gray-400" v-if="formData.category === 'POKE'">
-          Rank: <span class="text-electric-violet-400 font-bold">{{ formData.rankName }}</span>
-        </p>
-        <p class="text-sm text-gray-500">Estimated time: <span class="text-cyan-magic-300 font-bold">{{ estimatedTime }}s</span></p>
-      </div>
-      <div class="text-center mt-8">
-        <button @click="$emit('cancel')" class="btn-danger px-8 py-3">Cancel Search</button>
-      </div>
-    </div>
-  `
-}
 
-// API Hook
+
 const { findMatch, checkStatus, cancelMatch, loading: loadingApi, error: errorApi } = useScrimAPI()
+
+// Toasts System
+const toasts = ref([])
+const addToast = (message, type = 'error') => {
+  const id = Date.now() + Math.random()
+  const icons = {
+    error: `<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`,
+    success: `<svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+    warning: `<svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+  }
+  toasts.value.push({ id, message, type, icon: icons[type] })
+  setTimeout(() => removeToast(id), 5000)
+}
+const removeToast = (id) => {
+  toasts.value = toasts.value.filter(t => t.id !== id)
+}
 
 // State
 const selectedCategory = ref(null)
@@ -598,22 +602,62 @@ const matchData = ref({
 
 // Methods
 const startSearch = async () => {
-  const isValid = selectedCategory.value === 'POKE' ? isValidFormPoke.value : isValidFormWarkop.value
+  const isPoke = selectedCategory.value === 'POKE'
+  const isValid = isPoke ? isValidFormPoke.value : isValidFormWarkop.value
   
   if (!isValid) {
-    alert('Please fill in all required fields')
+    if (formData.value.teamName.trim().length < 3) addToast("Team Name is too short (min 3 chars).", 'warning')
+    else if (!isPoke && formData.value.captainName.trim().length < 3) addToast("Captain Name is too short (min 3 chars).", 'warning')
+    else if (whatsappError.value) addToast(`WhatsApp Error: ${whatsappError.value}`, 'warning')
+    else if (!isValidWhatsApp.value) addToast("Please enter a valid WhatsApp number.", 'warning')
+    else addToast("Please fill in all required fields properly.", 'warning')
     return
   }
 
+  isSearching.value = true // SHOW WAITING UI IMMEDIATELY
+  
   try {
-    const result = await findMatch(formData.value)
+    // Pass WebSocket match-found callback to findMatch
+    const result = await findMatch(formData.value, (wsData) => {
+      // Called instantly when WebSocket delivers match
+      isSearching.value = false
+      clearInterval(pollInterval)
+      const match = wsData
+      matchData.value = {
+        yourTeam: {
+          name: formData.value.teamName,
+          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${formData.value.teamName}`,
+          rank: formData.value.rankName
+        },
+        opponentTeam: {
+          name: match.opponent_name || 'Opponent Team',
+          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${match.opponent_name}`,
+          rank: formData.value.category === 'WARKOP' ? 'Pro Scrim' : 'Similar Rank'
+        },
+        details: {
+          category: formData.value.category,
+          rankDiff: 0,
+          id: (match.match_id || 'MATCH').substring(0, 6).toUpperCase(),
+          whatsapp_url: match.whatsapp_url
+        },
+        timeout: match.expires_in || 60
+      }
+      showMatchModal.value = true
+    })
     
     if (result && result.request_id) {
        currentRequestId.value = result.request_id
-       isSearching.value = true
        startPolling(result.request_id)
+       addToast("Matchmaking started! Connecting to network...", 'success')
+    } else {
+       // Request accepted by server but structure weird? fallback
+       addToast("Matchmaking starting...", 'success')
     }
   } catch (err) {
+    isSearching.value = false // Revert if API blows up
+    let errMsg = "Failed to start match search."
+    if (errorApi.value) errMsg += ` Reason: ${errorApi.value}`
+    addToast(errMsg, 'error')
     console.error("Search failed", err)
   }
 }
@@ -656,7 +700,7 @@ const startPolling = (requestId) => {
       if (status.status === 'expired') {
           clearInterval(pollInterval)
           isSearching.value = false
-          alert("Request expired. Please try again.")
+          addToast("Request expired. Time limit reached.", 'warning')
       }
 
     } catch (err) {
@@ -703,12 +747,35 @@ const handleMatchAccept = () => {
   updateRankName()
 }
 
+// Live Status state
+const liveStats = ref({
+  waitTime: 30,
+  tolerance: 1,
+  confirm: 60
+})
+let liveStatusInterval = null
+
 const handleMatchDecline = () => {
   showMatchModal.value = false
+  addToast("Match declined/expired. You have been placed back to selection.", 'warning')
 }
+
+onMounted(() => {
+  // Live Status dynamic animation
+  liveStatusInterval = setInterval(() => {
+    // fluctuate wait time between 24s and 34s
+    liveStats.value.waitTime = Math.floor(24 + Math.random() * 10)
+    // occasionally blip confirm time
+    if (Math.random() > 0.8) {
+      liveStats.value.confirm = 59
+      setTimeout(() => liveStats.value.confirm = 60, 1000)
+    }
+  }, 3500)
+})
 
 onUnmounted(() => {
   if (pollInterval) clearInterval(pollInterval)
+  if (liveStatusInterval) clearInterval(liveStatusInterval)
 })
 
 // Recent Matches
@@ -720,3 +787,17 @@ const recentMatches = ref([
 
 updateRankName()
 </script>
+
+<style scoped>
+.toast-enter-active, .toast-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(50px) scale(0.9);
+}
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.9);
+}
+</style>

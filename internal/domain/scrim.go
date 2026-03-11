@@ -102,10 +102,15 @@ func (sr *ScrimRequest) CanMatchWith(other *ScrimRequest) bool {
 		return false
 	}
 
-	// POKE category: check rank tolerance (±2)
+	// POKE category: strict rank tolerance
 	if sr.Category == CategoryPoke {
+		// Rank 9 (Classic/Fun): exact match only
+		if sr.RankWeight == 9 || other.RankWeight == 9 {
+			return sr.RankWeight == other.RankWeight
+		}
+		// Ranks 1-8: ±1 tolerance
 		rankDiff := abs(sr.RankWeight - other.RankWeight)
-		return rankDiff <= 2
+		return rankDiff <= 1
 	}
 
 	// WARKOP category: always can match (no rank restriction)

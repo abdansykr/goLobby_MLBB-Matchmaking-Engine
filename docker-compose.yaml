@@ -1,7 +1,24 @@
 version: '3.8'
 
+# ──────────────────────────────────────────────────────────
+# GoLobby Matchmaking Engine — Phase 2 Production Stack
+#
+# Services:
+#   postgres      → PostgreSQL 15 (primary datastore)
+#   redis         → Redis 7 (queue + distributed locking)
+#   app           → Go Fiber backend (matchmaking + WS)
+#   frontend      → Vue.js 3 (served via Nginx)
+#   ocr-service   → Python FastAPI (OCR anti-fraud)
+#   prometheus    → Metrics collection
+#   grafana       → Metrics visualisation dashboard
+#   migrate       → One-shot DB migration runner
+# ──────────────────────────────────────────────────────────
+
 services:
-  # PostgreSQL Database
+
+  # ════════════════════════════════════════════════════════
+  # PostgreSQL — Primary Database
+  # ════════════════════════════════════════════════════════
   postgres:
     image: postgres:15-alpine
     container_name: golobby_postgres
@@ -14,34 +31,52 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "${DB_PORT_EXTERNAL:-5433}:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-golobby}" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - golobby_network
 
-  # Redis Cache & Queue
+  # ════════════════════════════════════════════════════════
+  # Redis — Queue & Distributed Locking
+  #
+  # Key decisions:
+  #   --save 60 1000        → RDB snapshot every 60s if ≥1000 keys changed
+  #   --appendonly yes      → AOF persistence (survives restart without data loss)
+  #   --maxmemory 256mb     → Cap memory; policy evicts least-recently-used queue keys
+  #   --requirepass         → Password auth (read from .env / env vars)
+  #
+  # Redis keys used by the Go app (see internal/repository/redis_cache.go):
+  #   matchmaking:queue                  → Sorted Set (FIFO queue, score = Unix timestamp)
+  #   matchmaking:lock:<team-uuid>       → String (expires in ready_timeout seconds) — Distributed Lock
+  #   matchmaking:match:<match-uuid>     → String "PENDING" (TTL = ready_timeout)
+  #   rate_limit:<ip>                    → String counter for IP-based rate limiting
+  # ════════════════════════════════════════════════════════
   redis:
     image: redis:7-alpine
     container_name: golobby_redis
     restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD:-redis123} --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: >
+      redis-server --requirepass ${REDIS_PASSWORD:-redis123} --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1000 --appendonly yes --appendfilename golobby.aof --loglevel notice
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      # Use AUTH before PING so the healthcheck works even with password set
+      test: [ "CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-redis123} --no-auth-warning ping | grep PONG" ]
       interval: 10s
       timeout: 3s
       retries: 5
     networks:
       - golobby_network
 
-  # Matchmaking Application
+  # ════════════════════════════════════════════════════════
+  # Go Matchmaking Backend
+  # ════════════════════════════════════════════════════════
   app:
     build:
       context: .
@@ -49,22 +84,44 @@ services:
     container_name: golobby_app
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_PORT:-8080}:8080" # HTTP / WebSocket API
+      - "2112:2112" # Prometheus /metrics endpoint
     environment:
-      - APP_ENV=${APP_ENV:-production}
-      - APP_PORT=8080
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=${DB_USER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD:-postgres}
-      - DB_NAME=${DB_NAME:-antigravity}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
-      - MATCHMAKING_TIMEOUT=${MATCHMAKING_TIMEOUT:-30}
-      - READY_TIMEOUT=${READY_TIMEOUT:-60}
-      - ENABLE_RATE_LIMIT=${ENABLE_RATE_LIMIT:-true}
+      APP_ENV: ${APP_ENV:-production}
+      APP_PORT: "8080"
+      METRICS_PORT: "2112"
+
+      # ── Database ──────────────────────────────────────────
+      DB_HOST: postgres # Docker service name (not localhost!)
+      DB_PORT: "5432" # Internal container port
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-golobby}
+
+      # ── Redis ─────────────────────────────────────────────
+      # REDIS_HOST  → use the Docker service name so the Go app can resolve it
+      # REDIS_PORT  → internal Redis port (6379), NOT the host-mapped port
+      # REDIS_PASSWORD → must match the --requirepass value in the redis service
+      REDIS_HOST: redis # ← Docker service name
+      REDIS_PORT: "6379" # ← Internal port (always 6379 inside Docker)
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+      REDIS_DB: "0" # Use DB index 0 (default)
+
+      # ── Security ──────────────────────────────────────────
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-min-32-chars}
+      OCR_WEBHOOK_SECRET: ${OCR_WEBHOOK_SECRET:-ocr-webhook-secret-changeme}
+
+      # ── Matchmaking tuning ────────────────────────────────
+      MATCHMAKING_TIMEOUT: ${MATCHMAKING_TIMEOUT:-30}
+      READY_TIMEOUT: ${READY_TIMEOUT:-60}
+      INITIAL_RANK_RANGE: ${INITIAL_RANK_RANGE:-2}
+      EXTENDED_RANK_RANGE: ${EXTENDED_RANK_RANGE:-4}
+      GHOSTING_PENALTY: ${GHOSTING_PENALTY:--10}
+      ENABLE_RATE_LIMIT: ${ENABLE_RATE_LIMIT:-true}
+
+      # ── OCR Service URL (for forwarding upload requests) ──
+      OCR_SERVICE_URL: http://ocr-service:8001
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,13 +130,102 @@ services:
     networks:
       - golobby_network
 
-  # Database Migration Tool (run once)
+  # ════════════════════════════════════════════════════════
+  # Vue.js Frontend (served by Nginx)
+  # ════════════════════════════════════════════════════════
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: golobby_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8080/ws}
+    depends_on:
+      - app
+    networks:
+      - golobby_network
+
+  # ════════════════════════════════════════════════════════
+  # Python OCR Microservice (FastAPI + Tesseract)
+  # ════════════════════════════════════════════════════════
+  ocr-service:
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    container_name: golobby_ocr
+    restart: unless-stopped
+    ports:
+      - "${OCR_PORT:-8001}:8001"
+    environment:
+      GO_BACKEND_URL: http://app:8080
+      GO_WEBHOOK_SECRET: ${OCR_WEBHOOK_SECRET:-ocr-webhook-secret-changeme}
+      MIN_CONFIDENCE: ${OCR_MIN_CONFIDENCE:-60.0}
+      TESSERACT_CMD: /usr/bin/tesseract
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      - app
+    networks:
+      - golobby_network
+
+  # ════════════════════════════════════════════════════════
+  # Prometheus — Metrics Scraper
+  # ════════════════════════════════════════════════════════
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: golobby_prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - golobby_network
+
+  # ════════════════════════════════════════════════════════
+  # Grafana — Visual Dashboard
+  # ════════════════════════════════════════════════════════
+  grafana:
+    image: grafana/grafana:10.3.3
+    container_name: golobby_grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-golobby2024}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - golobby_network
+
+  # ════════════════════════════════════════════════════════
+  # Database Migration (one-shot, restarts on failure)
+  # ════════════════════════════════════════════════════════
   migrate:
     image: migrate/migrate
     container_name: golobby_migrate
     volumes:
       - ./migrations:/migrations
-    command: [ "-path", "/migrations", "-database", "postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-golobby}?sslmode=disable", "up" ]
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-golobby}?sslmode=disable"
+      - "up"
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,12 +233,22 @@ services:
       - golobby_network
     restart: on-failure
 
+# ════════════════════════════════════════════════════════════
+# Networks
+# ════════════════════════════════════════════════════════════
 networks:
   golobby_network:
     driver: bridge
 
+# ════════════════════════════════════════════════════════════
+# Persistent Volumes
+# ════════════════════════════════════════════════════════════
 volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local

@@ -1,9 +1,9 @@
+/* Custom Font Import - Gaming Style */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Custom Font Import - Gaming Style */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   body {
@@ -246,4 +246,15 @@
 .chat-scroll::-webkit-scrollbar-thumb {
   @apply bg-electric-violet-500/50 rounded-full;
   @apply hover:bg-electric-violet-400;
+}
+
+/* Dynamic Live Status animations */
+.pulse-ring-violet {
+  @apply relative;
+}
+
+.pulse-ring-violet::before {
+  content: '';
+  @apply absolute inset-0 rounded-full border border-electric-violet-500/50;
+  animation: radarPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
