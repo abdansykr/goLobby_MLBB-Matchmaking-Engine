@@ -77,7 +77,6 @@ Untuk penjelasan mendalam mengenai setiap modul, silakan cek folder `Documentati
 
 ---
 
----
 
 ## 🚀 Quick Start
 
