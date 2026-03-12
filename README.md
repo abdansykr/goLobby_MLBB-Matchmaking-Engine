@@ -38,28 +38,45 @@ Designed for competitive teams looking for instant matches regardless of rank.
 ## 🏗️ Technical Architecture
 
 ### **Tech Stack**
-*   **Language:** Go 1.21+
-*   **Framework:** Fiber v2 (Fast HTTP Web Framework)
-*   **Database:** PostgreSQL 15 (Data Persistence)
-*   **Containerization:** Docker & Docker Compose
-*   **Migration:** `golang-migrate`
 
-### **Project Structure (Clean Architecture)**
-```
-matchMaking_go/
-├── cmd/
-│   └── server/          # Application entry point
-├── internal/
-│   ├── domain/          # Business entities & interfaces
-│   ├── repository/      # Database implementations (PostgreSQL)
-│   ├── usecase/         # Matchmaking logic & business rules
-│   ├── delivery/        # HTTP handlers
-│   └── config/          # Environment configuration
-├── migrations/          # Database schema migrations
-└── frontend/            # Vue.js Frontend (Vite)
-```
+### Backend
+* **Language:** Go (Golang)
+* **Framework:** Fiber / Gin
+* **Database:** PostgreSQL (Primary), Redis (Queue & Caching)
+* **Real-time:** WebSockets
+
+### Frontend
+* **Framework:** Vue 3 + Vite
+* **Styling:** Tailwind CSS
+* **UI Concept:** Glassmorphism E-Sports Theme
+
+### Infrastructure & DevOps
+* **Containerization:** Docker & Docker Compose
+* **Proxy & Tunneling:** Cloudflare Tunnel
+* **Monitoring:** Prometheus & Grafana
+* **CI/CD:** GitHub Actions (Automated Testing & Deployment)
+
+## 🏗️ Arsitektur Sistem
+Proyek ini dibangun dengan pendekatan microservices yang saling berkomunikasi melalui jaringan internal Docker:
+
+1.  **Vue.js Client** berkomunikasi via WebSocket ke **Go Backend**.
+2.  **Go Backend** mengelola antrean di **Redis** dan menyimpan data permanen di **Postgres**.
+3.  **FastAPI (Python)** memproses gambar hasil pertandingan yang dikirim oleh Backend untuk verifikasi skor.
 
 ---
+
+## 📂 Dokumentasi Teknis
+Untuk penjelasan mendalam mengenai setiap modul, silakan cek folder `Documentation/`:
+1. [Architecture Overview](./Documentation/1_Architecture_Overview.md)
+2. [Matchmaking Engine Logic](./Documentation/2_Matchmaking_Engine.md)
+3. [WebSocket Realtime System](./Documentation/3_WebSocket_Realtime.md)
+4. [OCR & Metrics System](./Documentation/4_OCR_Metrics_System.md)
+5. [Frontend & UI Design](./Documentation/5_Frontend_UI.md)
+6. [Docker Deployment Guide](./Documentation/6_Docker_Deployment.md)
+
+
+---
+
 
 ## 🚀 Quick Start
 
@@ -141,7 +158,7 @@ Remove a team from the matchmaking queue.
 | `DB_HOST` | `postgres` | Database host |
 | `DB_PORT` | `5432` | Database port |
 | `DB_USER` | `postgres` | Database user |
-| `DB_NAME` | `antigravity` | Database name |
+| `DB_NAME` | `golobby` | Database name |
 | `SERVER_PORT` | `3000` | Backend API port |
 | `ENABLE_RATE_LIMIT`| `true` | Enable API rate limiting |
 
