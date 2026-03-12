@@ -2,7 +2,14 @@ import { ref, onUnmounted } from 'vue'
 import axios from 'axios'
 
 const API_BASE = '/api/scrim'
-const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws'
+
+// Auto-deteksi protokol WebSocket berdasarkan halaman yang sedang dibuka.
+// - Jika browser buka https:// (production/Cloudflare) → pakai wss://
+// - Jika browser buka http:// (lokal) → pakai ws://
+// VITE_WS_URL dari .env akan selalu diutamakan jika ada.
+const _wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+const _wsHost = window.location.host
+const WS_BASE = import.meta.env.VITE_WS_URL || `${_wsProtocol}//${_wsHost}/ws`
 
 export function useScrimAPI() {
     const loading = ref(false)
