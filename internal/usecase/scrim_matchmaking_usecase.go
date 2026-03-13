@@ -59,7 +59,6 @@ func NewScrimMatchmakingUsecase(
 	}
 }
 
-
 // Start starts the matchmaking workers
 func (u *ScrimMatchmakingUsecase) Start() {
 	log.Printf("Starting %d scrim matchmaking workers...", u.workers)
@@ -435,9 +434,9 @@ func (u *ScrimMatchmakingUsecase) CancelRequest(ctx context.Context, id uuid.UUI
 
 			// Send WebSocket notification to opponent
 			go u.notifyWS(opponentRequestID.String(), map[string]interface{}{
-				"type":             "MATCH_DECLINED",
-				"reason":           "Lawan membatalkan pertandingan ini.",
-				"cancelled_by_id":  id.String(),
+				"type":            "MATCH_DECLINED",
+				"reason":          "Lawan membatalkan pertandingan ini.",
+				"cancelled_by_id": id.String(),
 			})
 
 			// Re-enqueue opponent so they can find a new match quickly
@@ -517,13 +516,13 @@ func (u *ScrimMatchmakingUsecase) DeclineMatch(ctx context.Context, matchID uuid
 // RejectMatch is the authoritative, concurrency-safe match rejection endpoint.
 //
 // Design goals:
-//   1. Atomic — uses a Redis Lua script so exactly ONE goroutine performs the
-//      cancellation even if both players click "Reject" at the same millisecond.
-//   2. Broadcast — sends MATCH_CANCELLED to BOTH participants via WebSocket.
-//   3. Re-queue  — the non-rejecting participant is automatically placed back
-//      into the matchmaking queue so they find a new opponent without manual action.
-//   4. DB consistency — the PostgreSQL match row is updated to 'cancelled' and
-//      both scrim_request rows are reset to 'searching'.
+//  1. Atomic — uses a Redis Lua script so exactly ONE goroutine performs the
+//     cancellation even if both players click "Reject" at the same millisecond.
+//  2. Broadcast — sends MATCH_CANCELLED to BOTH participants via WebSocket.
+//  3. Re-queue  — the non-rejecting participant is automatically placed back
+//     into the matchmaking queue so they find a new opponent without manual action.
+//  4. DB consistency — the PostgreSQL match row is updated to 'cancelled' and
+//     both scrim_request rows are reset to 'searching'.
 //
 // Endpoint: POST /api/scrim/match/:id/reject?request_id=<uuid>
 func (u *ScrimMatchmakingUsecase) RejectMatch(ctx context.Context, matchID uuid.UUID, rejectingRequestID uuid.UUID) error {
@@ -635,6 +634,18 @@ func (u *ScrimMatchmakingUsecase) ConfirmMatch(ctx context.Context, matchID uuid
 		allAccepted = true
 	}
 
+	var otherRequestID uuid.UUID
+	if match.Team1ID == requestID {
+		otherRequestID = match.Team2ID
+	} else {
+		otherRequestID = match.Team1ID
+	}
+
+	u.notifyWS(otherRequestID.String(), map[string]interface{}{
+		"type":    "OPPONENT_ACCEPTED",
+		"message": "Lawan sudah menyetujui, menunggu Anda!",
+	})
+
 	if allAccepted {
 		// Both participants have accepted! Update the database.
 		err = u.matchRepo.Confirm(ctx, matchID)
@@ -673,4 +684,3 @@ func abs(x int) int {
 	}
 	return x
 }
-

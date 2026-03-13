@@ -53,7 +53,7 @@ export function useScrimAPI() {
                         if (matchFoundCallback) {
                             matchFoundCallback(data)
                         }
-                        disconnectWebSocket()
+                        // DO NOT disconnect WebSocket here! We need it for MATCH_SUCCESS and MATCH_CANCELLED
                     }
 
                     if (data.type === 'MATCH_SUCCESS') {
