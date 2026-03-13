@@ -36,7 +36,7 @@
           </div>
           
           <div class="text-center">
-            <p class="text-xs text-gray-400 uppercase tracking-wide">Rep Score</p>
+            <p class="text-xs text-gray-400 uppercase tracking-wide">Skor Reputasi</p>
             <div class="flex items-center gap-2 mt-1">
               <span class="font-bold text-lg" :class="reputationColor">
                 {{ userStats.reputation }}
@@ -67,7 +67,7 @@
             </div>
             <div class="hidden lg:block">
               <p class="font-bold text-sm">{{ userName }}</p>
-              <p class="text-xs text-gray-400">Captain</p>
+              <p class="text-xs text-gray-400">Kapten</p>
             </div>
             <!-- Dropdown Icon -->
             <svg class="w-4 h-4 text-gray-400 group-hover:text-cyan-magic-300 transition-colors" 

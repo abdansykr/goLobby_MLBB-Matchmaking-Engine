@@ -77,7 +77,7 @@ func main() {
 
 	// ── Scrim Usecase ──────────────────────────────────────────────────
 	scrimUsecase := usecase.NewScrimMatchmakingUsecase(
-		scrimRequestRepo, scrimMatchRepo, rateLimiter, 4,
+		scrimRequestRepo, scrimMatchRepo, rateLimiter, cacheRepo, 4,
 	)
 	scrimUsecase.Start()
 	defer scrimUsecase.Stop()

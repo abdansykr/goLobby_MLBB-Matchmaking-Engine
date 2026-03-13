@@ -156,22 +156,27 @@ func (h *MatchmakingHandler) CancelMatchmaking(c *fiber.Ctx) error {
 
 // WebSocketHandler handles WebSocket connections
 func (h *MatchmakingHandler) WebSocketHandler(c *websocket.Conn) {
-	teamID := c.Query("team_id")
-	if teamID == "" {
-		log.Println("WebSocket connection without team_id")
+	// Support both legacy team_id and new scrim request_id
+	clientID := c.Query("team_id")
+	if clientID == "" {
+		clientID = c.Query("request_id")
+	}
+
+	if clientID == "" {
+		log.Println("WebSocket connection without team_id or request_id")
 		c.Close()
 		return
 	}
 
 	// Register connection
-	h.hub.Register(teamID, c)
-	defer h.hub.Unregister(teamID)
+	h.hub.Register(clientID, c)
+	defer h.hub.Unregister(clientID)
 
 	// Keep connection alive
 	for {
 		_, _, err := c.ReadMessage()
 		if err != nil {
-			log.Printf("WebSocket read error for team %s: %v", teamID, err)
+			log.Printf("WebSocket read error for client %s: %v", clientID, err)
 			break
 		}
 	}

@@ -34,7 +34,6 @@ venv/
 .env.local
 .env.production
 .env.development
-.env.example
 
 # IDE & Editor
 .vscode/

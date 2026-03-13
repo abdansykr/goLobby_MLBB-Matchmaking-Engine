@@ -17,10 +17,18 @@ type ScrimHandler struct {
 }
 
 func NewScrimHandler(scrimUsecase *usecase.ScrimMatchmakingUsecase, wsHub *WebSocketHub) *ScrimHandler {
-	return &ScrimHandler{
+	h := &ScrimHandler{
 		scrimUsecase: scrimUsecase,
 		wsHub:        wsHub,
 	}
+
+	// Wire the WebSocket notifier into the usecase so it can push
+	// MATCH_DECLINED events to the opponent in real-time.
+	scrimUsecase.SetWSNotifier(func(targetRequestID string, payload map[string]interface{}) {
+		wsHub.BroadcastToClient(targetRequestID, payload)
+	})
+
+	return h
 }
 
 // Helper functions to extract values from map (support multiple keys)
@@ -231,7 +239,7 @@ func (h *ScrimHandler) CancelRequest(c *fiber.Ctx) error {
 	})
 }
 
-// ConfirmMatch handles POST /api/scrim/match/:id/confirm
+// ConfirmMatch handles POST /api/scrim/match/:id/confirm?request_id=<uuid>
 func (h *ScrimHandler) ConfirmMatch(c *fiber.Ctx) error {
 	idParam := c.Params("id")
 	matchID, err := uuid.Parse(idParam)
@@ -241,7 +249,15 @@ func (h *ScrimHandler) ConfirmMatch(c *fiber.Ctx) error {
 		})
 	}
 
-	err = h.scrimUsecase.ConfirmMatch(c.Context(), matchID)
+	requestIDParam := c.Query("request_id")
+	requestID, err := uuid.Parse(requestIDParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "request_id query param is required and must be a valid UUID",
+		})
+	}
+
+	err = h.scrimUsecase.ConfirmMatch(c.Context(), matchID, requestID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -249,7 +265,73 @@ func (h *ScrimHandler) ConfirmMatch(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"message": "Match confirmed successfully",
+		"message": "Match acceptance recorded successfully",
+	})
+}
+
+// DeclineMatch handles POST /api/scrim/match/:id/decline?request_id=<uuid>
+// Called when a player clicks "Tolak Lawan" on the match modal.
+// It cancels the match and immediately notifies the opponent via WebSocket.
+func (h *ScrimHandler) DeclineMatch(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	matchID, err := uuid.Parse(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid match ID",
+		})
+	}
+
+	requestIDParam := c.Query("request_id")
+	requestID, err := uuid.Parse(requestIDParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "request_id query param is required and must be a valid UUID",
+		})
+	}
+
+	if err := h.scrimUsecase.DeclineMatch(c.Context(), matchID, requestID); err != nil {
+		log.Printf("❌ DeclineMatch error: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Match declined — opponent notified",
+	})
+}
+
+// RejectMatch handles POST /api/scrim/match/:id/reject?request_id=<uuid>
+// This is the canonical, concurrency-safe rejection endpoint.
+// It uses a Redis Lua script to guarantee that only ONE goroutine performs
+// database writes and WebSocket broadcasts even if both players reject
+// simultaneously. MATCH_CANCELLED is sent to BOTH participants.
+func (h *ScrimHandler) RejectMatch(c *fiber.Ctx) error {
+	idParam := c.Params("id")
+	matchID, err := uuid.Parse(idParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid match ID",
+		})
+	}
+
+	requestIDParam := c.Query("request_id")
+	requestID, err := uuid.Parse(requestIDParam)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "request_id query param is required and must be a valid UUID",
+		})
+	}
+
+	if err := h.scrimUsecase.RejectMatch(c.Context(), matchID, requestID); err != nil {
+		log.Printf("❌ RejectMatch error: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Match rejected — kedua tim telah diberitahu",
 	})
 }
 
@@ -275,4 +357,6 @@ func RegisterScrimRoutes(app *fiber.App, handler *ScrimHandler) {
 	api.Get("/request/:id", handler.GetRequestStatus)
 	api.Post("/request/:id/cancel", handler.CancelRequest)
 	api.Post("/match/:id/confirm", handler.ConfirmMatch)
+	api.Post("/match/:id/decline", handler.DeclineMatch)  // legacy: single notify
+	api.Post("/match/:id/reject", handler.RejectMatch)    // canonical: atomic, broadcasts to both
 }

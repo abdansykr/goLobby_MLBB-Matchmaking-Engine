@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen pb-10 px-4 relative overflow-hidden">
+  <div class="min-h-screen pb-10 px-4 relative overflow-x-hidden">
     <!-- TRON BACKGROUND LINES -->
     <div class="fixed inset-0 pointer-events-none -z-10 bg-grid-cyan opacity-10"></div>
     
@@ -30,7 +30,7 @@
           SCRIM MATCHMAKING
         </h2>
         <p class="text-xl text-gray-400">
-          Find worthy opponents. Prove your dominance.
+          Temukan lawan yang sepadan. Buktikan ketangguhanmu.
         </p>
       </div>
 
@@ -40,7 +40,7 @@
           
           <!-- STEP 1: Category Selection -->
           <div v-if="!selectedCategory" class="space-y-6">
-            <h3 class="text-2xl font-bold text-center mb-8">Choose Your Match Type</h3>
+            <h3 class="text-2xl font-bold text-center mb-8">Pilih Tipe Pertandingan</h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- POKE Card -->
@@ -55,11 +55,11 @@
                   
                   <!-- Title -->
                   <h4 class="text-2xl font-bold text-glow">POKE</h4>
-                  <p class="text-electric-violet-300 font-semibold">Ranked Solo/Duo Match</p>
+                  <p class="text-electric-violet-300 font-semibold">Pertandingan Solo/Duo Ranked</p>
                   
                   <!-- Description -->
                   <p class="text-sm text-gray-400 leading-relaxed">
-                    Match based on your solo rank with balanced matchmaking (±1 rank tolerance)
+                    Sistem matchmaking seimbang berdasarkan rank Anda (Toleransi ±1 rank)
                   </p>
                   
                   <!-- Features -->
@@ -68,25 +68,25 @@
                       <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
-                      Rank-based matchmaking
+                      Matchmaking berdasarkan Rank
                     </div>
                     <div class="flex items-center gap-2 text-gray-300">
                       <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
-                      Fair & balanced teams
+                      Jaminan Tim yang Adil
                     </div>
                     <div class="flex items-center gap-2 text-gray-300">
                       <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
-                      Warrior to Classic ranks
+                      Mendukung Warrior hingga Mythic
                     </div>
                   </div>
                   
                   <!-- Button -->
                   <button @click="selectCategory('POKE')" class="w-full btn-magic py-3 text-sm mt-4">
-                    SELECT POKE
+                    PILIH POKE
                   </button>
                 </div>
               </div>
@@ -103,11 +103,11 @@
                   
                   <!-- Title -->
                   <h4 class="text-2xl font-bold text-glow-gold">WARKOP</h4>
-                  <p class="text-antique-gold-300 font-semibold">Pro Scrim Team Match</p>
+                  <p class="text-antique-gold-300 font-semibold">Mode Pro Scrim Tim</p>
                   
                   <!-- Description -->
                   <p class="text-sm text-gray-400 leading-relaxed">
-                    Professional team scrimmage with instant match for competitive teams
+                    Sistem pemusatan Scrim / Latih Tanding instan antar tim E-Sport profesional
                   </p>
                   
                   <!-- Features -->
@@ -116,25 +116,25 @@
                       <svg class="w-4 h-4 text-antique-gold-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
-                      Instant matching
+                      Cari Musuh Instan
                     </div>
                     <div class="flex items-center gap-2 text-gray-300">
                       <svg class="w-4 h-4 text-antique-gold-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
-                      Pro team coordination
+                      Uji Kekuatan Tim
                     </div>
                     <div class="flex items-center gap-2 text-gray-300">
                       <svg class="w-4 h-4 text-antique-gold-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                       </svg>
-                      Competitive environment
+                      Real Competitive Esports
                     </div>
                   </div>
                   
                   <!-- Button -->
                   <button @click="selectCategory('WARKOP')" class="w-full btn-gold py-3 text-sm mt-4">
-                    SELECT WARKOP
+                    PILIH WARKOP
                   </button>
                 </div>
               </div>
@@ -153,7 +153,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to selection
+                Kembali ke Menu Utama
               </button>
 
               <div class="space-y-8">
@@ -162,16 +162,16 @@
                     <svg class="w-5 h-5 text-electric-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="text-electric-violet-300 font-bold">POKE - Ranked Solo Match</span>
+                    <span class="text-electric-violet-300 font-bold">POKE - Matchmaking Berkala</span>
                   </div>
-                  <h3 class="text-2xl font-bold text-glow mb-2">POKE - Ranked Solo Match</h3>
-                  <p class="text-sm text-gray-400">Fill in your details for ranked matchmaking</p>
+                  <h3 class="text-2xl font-bold text-glow mb-2">POKE - Solo/Duo Mabar</h3>
+                  <p class="text-sm text-gray-400">Silakan isi data koneksi Anda</p>
                 </div>
 
                 <div class="space-y-6 max-w-xl mx-auto">
                   <!-- Team Name -->
                   <div>
-                    <label class="block text-sm text-gray-400 mb-2 font-medium">Your Name</label>
+                    <label class="block text-sm text-gray-400 mb-2 font-medium">Nickname Akun (IGN)</label>
                     <input 
                       type="text" 
                       v-model="formData.teamName" 
@@ -183,7 +183,7 @@
 
                   <!-- WhatsApp -->
                   <div>
-                    <label class="block text-sm text-gray-400 mb-2 font-medium">WhatsApp Number</label>
+                    <label class="block text-sm text-gray-400 mb-2 font-medium">Nomor WhatsApp Aktif</label>
                     <input 
                       type="tel" 
                       v-model="formData.whatsappNumber" 
@@ -195,12 +195,12 @@
                       @keyup.enter="startSearch"
                     />
                     <p v-if="whatsappError" class="text-xs text-red-400 mt-1">{{ whatsappError }}</p>
-                    <p v-else class="text-xs text-gray-500 mt-1">Format: 628xxxxxxxxx (without +)</p>
+                    <p v-else class="text-xs text-gray-500 mt-1">Format: 628xxxxxxxxx (tanpa awalan +)</p>
                   </div>
 
                   <!-- Rank -->
                   <div>
-                    <label class="block text-sm text-gray-400 mb-2 font-medium">Your Solo Rank</label>
+                    <label class="block text-sm text-gray-400 mb-2 font-medium">Rank Akun Saat Ini</label>
                     <select 
                       v-model="formData.rankWeight" 
                       @change="updateRankName" 
@@ -216,7 +216,7 @@
                       <option value="8">8 - Mythical Glory</option>
                       <option value="9">9 - Classic/Fun</option>
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">Matchmaking tolerance: ±1 ranks</p>
+                    <p class="text-xs text-gray-500 mt-1">Sistem mencari toleransi: ±1 Rank</p>
                   </div>
                 </div>
 
@@ -249,10 +249,10 @@
                       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
-                      FIND RANKED MATCH
+                      MULAI PENCARIAN LAWAN
                     </span>
                   </button>
-                  <p class="text-sm text-gray-500 mt-4">Balanced matchmaking based on rank</p>
+                  <p class="text-sm text-gray-500 mt-4">Pastikan data sudah benar</p>
                 </div>
               </div>
             </div>
@@ -271,7 +271,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to selection
+                Kembali ke Menu Utama
               </button>
 
               <div class="space-y-8">
@@ -282,14 +282,14 @@
                     </svg>
                     <span class="text-antique-gold-300 font-bold">WARKOP - Pro Scrim</span>
                   </div>
-                  <h3 class="text-2xl font-bold text-glow-gold mb-2">Team Registration</h3>
-                  <p class="text-sm text-gray-400">Professional team scrim details</p>
+                  <h3 class="text-2xl font-bold text-glow-gold mb-2">Pendaftaran Skuad</h3>
+                  <p class="text-sm text-gray-400">Siapkan data tim E-Sports untuk diadu</p>
                 </div>
 
                 <div class="space-y-6 max-w-xl mx-auto">
                   <!-- Team Name -->
                   <div>
-                    <label class="block text-sm text-gray-400 mb-2 font-medium">Team Name</label>
+                    <label class="block text-sm text-gray-400 mb-2 font-medium">Nama Skuad/Tim</label>
                     <input 
                       type="text" 
                       v-model="formData.teamName" 
@@ -301,7 +301,7 @@
 
                   <!-- Captain Name -->
                   <div>
-                    <label class="block text-sm text-gray-400 mb-2 font-medium">Captain Name</label>
+                    <label class="block text-sm text-gray-400 mb-2 font-medium">Nama/Nickname Kapten</label>
                     <input 
                       type="text" 
                       v-model="formData.captainName" 
@@ -313,7 +313,7 @@
 
                   <!-- WhatsApp -->
                   <div>
-                    <label class="block text-sm text-gray-400 mb-2 font-medium">WhatsApp Number (Captain)</label>
+                    <label class="block text-sm text-gray-400 mb-2 font-medium">Nomor WhatsApp (Kapten)</label>
                     <input 
                       type="tel" 
                       v-model="formData.whatsappNumber" 
@@ -325,7 +325,7 @@
                       @keyup.enter="startSearch"
                     />
                     <p v-if="whatsappError" class="text-xs text-red-400 mt-1">{{ whatsappError }}</p>
-                    <p v-else class="text-xs text-gray-500 mt-1">Format: 628xxxxxxxxx (without +)</p>
+                    <p v-else class="text-xs text-gray-500 mt-1">Format: 628xxxxxxxxx (tanpa awalan +)</p>
                   </div>
 
                   <!-- Pro Info -->
@@ -335,8 +335,8 @@
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                       </svg>
                       <div>
-                        <p class="text-antique-gold-400 font-bold text-sm">Pro Scrim Mode</p>
-                        <p class="text-xs text-gray-400 mt-1">Instant match with other professional teams. No rank filtering applied.</p>
+                        <p class="text-antique-gold-400 font-bold text-sm">Ketentuan Mode Pro Scrim</p>
+                        <p class="text-xs text-gray-400 mt-1">Lawan akan dicari secara acak murni dari pool tim Pro lainnya (Tanpa ada filter batas Rank).</p>
                       </div>
                     </div>
                   </div>
@@ -371,10 +371,10 @@
                       <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                       </svg>
-                      FIND PRO SCRIM
+                      MINTA TANTANGAN TIM PRO
                     </span>
                   </button>
-                  <p class="text-sm text-gray-500 mt-4">Instant match with pro teams</p>
+                  <p class="text-sm text-gray-500 mt-4">Koneksi cepat ke server penantang E-Sport</p>
                 </div>
               </div>
             </div>
@@ -386,12 +386,12 @@
 
         <!-- Live Server Status Sidebar -->
         <div class="lg:col-span-1">
-          <div class="glass-card p-6 sticky top-6 h-fit border border-white/5 backdrop-blur-2xl bg-midnight-900/30">
+          <div class="glass-card p-6 sticky top-28 h-fit border border-white/5 backdrop-blur-2xl bg-midnight-900/30 shadow-2xl">
             <!-- Header with Live Indicator -->
             <div class="flex items-center justify-between mb-6">
               <h4 class="text-lg font-bold flex items-center gap-3">
                 <span class="bg-gradient-to-r from-cyan-magic-300 via-electric-violet-300 to-antique-gold-300 bg-clip-text text-transparent tracking-widest">
-                  LIVE STATUS
+                  Live Status
                 </span>
               </h4>
               <div class="flex items-center gap-2">
@@ -399,7 +399,7 @@
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </span>
-                <span class="text-xs text-green-400 font-mono">ONLINE</span>
+                <span class="text-xs text-green-400 font-mono">AKTIF</span>
               </div>
             </div>
             
@@ -420,7 +420,7 @@
                     <div class="text-2xl font-black text-cyan-magic-300 font-['Orbitron'] tracking-wider transition-all duration-300">
                       < {{ liveStats.waitTime }}s
                     </div>
-                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Avg Wait Time</div>
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Waktu Sambung</div>
                   </div>
                 </div>
               </div>
@@ -435,7 +435,7 @@
                 </div>
                 <div>
                   <div class="text-2xl font-black text-electric-violet-400 animate-pulse font-['Orbitron'] tracking-wider">±1</div>
-                  <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Rank Tolerance</div>
+                  <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Batas Toleransi</div>
                 </div>
               </div>
 
@@ -449,7 +449,7 @@
                 </div>
                 <div>
                   <div class="text-2xl font-black text-antique-gold-400 font-['Orbitron'] tracking-wider transition-all duration-300">{{ liveStats.confirm }}s</div>
-                  <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Confirm Time</div>
+                  <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Auto Confirm</div>
                 </div>
               </div>
             </div>
@@ -463,7 +463,7 @@
           <svg class="w-5 h-5 text-cyan-magic-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Recent Pro Scrims
+          Catatan Pertandingan Scrim Terkini
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div v-for="(match, index) in recentMatches" 
@@ -482,7 +482,7 @@
             <svg class="w-16 h-16 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <p class="text-sm">No pro scrim matches yet</p>
+            <p class="text-sm">Belum ada tim yang bertanding hari ini</p>
           </div>
         </div>
       </div>
@@ -495,22 +495,26 @@
       :opponentTeam="matchData.opponentTeam"
       :matchDetails="matchData.details"
       :timeout="matchData.timeout"
+      :matchStatus="matchStatus"
+      :whatsappUrl="matchData.details.whatsapp_url || ''"
+      :cancelReason="cancelReason"
       @accept="handleMatchAccept"
       @decline="handleMatchDecline"
       @timeout="handleMatchDecline"
+      @close="handleModalClose"
+      @search-again="handleSearchAgain"
     />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import axios from 'axios'
 import { useScrimAPI } from '@/composables/useScrimAPI'
 import MatchFoundModal from '@/components/MatchFoundModal.vue'
 import SearchingState from '@/components/SearchingState.vue'
 
-
-
-const { findMatch, checkStatus, cancelMatch, loading: loadingApi, error: errorApi } = useScrimAPI()
+const { findMatch, checkStatus, cancelMatch, rejectMatch, loading: loadingApi, error: errorApi } = useScrimAPI()
 
 // Toasts System
 const toasts = ref([])
@@ -599,6 +603,8 @@ const matchData = ref({
   details: {},
   timeout: 60
 })
+const matchStatus = ref('pending') // 'pending' | 'waiting' | 'confirmed' | 'cancelled'
+const cancelReason = ref('')
 
 // Methods
 const startSearch = async () => {
@@ -618,32 +624,64 @@ const startSearch = async () => {
   
   try {
     // Pass WebSocket match-found callback to findMatch
-    const result = await findMatch(formData.value, (wsData) => {
-      // Called instantly when WebSocket delivers match
-      isSearching.value = false
-      clearInterval(pollInterval)
-      const match = wsData
-      matchData.value = {
-        yourTeam: {
-          name: formData.value.teamName,
-          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${formData.value.teamName}`,
-          rank: formData.value.rankName
-        },
-        opponentTeam: {
-          name: match.opponent_name || 'Opponent Team',
-          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${match.opponent_name}`,
-          rank: formData.value.category === 'WARKOP' ? 'Pro Scrim' : 'Similar Rank'
-        },
-        details: {
-          category: formData.value.category,
-          rankDiff: 0,
-          id: (match.match_id || 'MATCH').substring(0, 6).toUpperCase(),
-          whatsapp_url: match.whatsapp_url
-        },
-        timeout: match.expires_in || 60
+    const result = await findMatch(
+      formData.value,
+      // ── onMatchFound: lawan ditemukan ──────────────────────────
+      (wsData) => {
+        isSearching.value = false
+        clearInterval(pollInterval)
+        const match = wsData
+        matchData.value = {
+          yourTeam: {
+            name: formData.value.teamName,
+            avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${formData.value.teamName}`,
+            rank: formData.value.rankName
+          },
+          opponentTeam: {
+            name: match.opponent_name || 'Tim Lawan',
+            avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${match.opponent_name}`,
+            rank: formData.value.category === 'WARKOP' ? 'Pro Scrim' : 'Similar Rank'
+          },
+          details: {
+            category: formData.value.category,
+            rankDiff: 0,
+            id: (match.match_id || 'MATCH').substring(0, 6).toUpperCase(),
+            whatsapp_url: match.whatsapp_url || '',
+            match_uuid: match.match_id
+          },
+          timeout: match.expires_in || 60
+        }
+        matchStatus.value = 'pending'
+        showMatchModal.value = true
+      },
+      // ── onMatchDeclined: lawan/sistem membatalkan pertandingan ─────
+      // Jangan tutup modal — ubah status ke 'cancelled' supaya UI
+      // menampilkan layar merah + tombol "Cari Lawan Baru"
+      (declineData) => {
+        clearInterval(pollInterval)
+        cancelReason.value = declineData?.reason || 'Pertandingan dibatalkan oleh lawan.'
+        matchStatus.value = 'cancelled'
+        // Modal tetap terbuka, tapi menampilkan state CANCELLED
+        showMatchModal.value = true
+        currentRequestId.value = null
+      },
+      // ── onMatchSuccess: kedua pihak telah menerima ─────────────────────
+      (successData) => {
+        if (matchData.value.details) {
+            matchData.value.details.whatsapp_url = successData.whatsapp_url || ''
+        }
+        matchStatus.value = 'confirmed'
+        // Tambah ke histori WARKOP saat fully confirmed
+        if (formData.value.category === 'WARKOP') {
+            recentMatches.value.unshift({
+                opponent: matchData.value.opponentTeam.name,
+                category: formData.value.category,
+                timeAgo: 'Baru saja'
+            })
+            if (recentMatches.value.length > 5) recentMatches.value.pop()
+        }
       }
-      showMatchModal.value = true
-    })
+    )
     
     if (result && result.request_id) {
        currentRequestId.value = result.request_id
@@ -688,11 +726,13 @@ const startPolling = (requestId) => {
             details: {
                category: status.category,
                rankDiff: 0,
-               id: match.match_id.substring(0, 6).toUpperCase(),
-               whatsapp_url: match.whatsapp_url
+               id: match.match_id ? match.match_id.substring(0, 6).toUpperCase() : 'MATCH',
+               whatsapp_url: match.whatsapp_url || '',
+               match_uuid: match.match_id
             },
             timeout: match.expires_in || 60
          }
+         matchStatus.value = 'pending'
          
          showMatchModal.value = true
       }
@@ -718,33 +758,25 @@ const cancelSearch = async () => {
   currentRequestId.value = null
 }
 
-const handleMatchAccept = () => {
-  if (matchData.value.details.whatsapp_url) {
-     window.open(matchData.value.details.whatsapp_url, '_blank')
-  }
-  showMatchModal.value = false
-  
-  // Only add WARKOP (Pro Scrim) to history, not POKE
-  if (formData.value.category === 'WARKOP') {
-    recentMatches.value.unshift({
-      opponent: matchData.value.opponentTeam.name,
-      category: formData.value.category,
-      timeAgo: 'Just now'
-    })
-    
-    if (recentMatches.value.length > 5) {
-      recentMatches.value.pop()
+// ── Terima Match ─────────────────────────────────────────────────
+// 1. Panggil endpoint /confirm ke backend
+// 2. Ubah matchStatus → 'waiting' selagi menunggu lawan
+// 3. Modal tetap terbuka
+const handleMatchAccept = async () => {
+  const matchUUID = matchData.value.details?.match_uuid
+  const myRequestId = currentRequestId.value
+
+  // Langsung ubah ke state waiting supaya UI terkunci
+  matchStatus.value = 'waiting'
+
+  if (matchUUID && myRequestId) {
+    try {
+      await axios.post(`/api/scrim/match/${matchUUID}/confirm?request_id=${myRequestId}`)
+    } catch (err) {
+      // Backend error (mis. sudah confirmed/expired) — biarkan UI handle error/timeout
+      console.warn('Confirm match error:', err)
     }
   }
-  
-  // Reset
-  selectedCategory.value = null
-  formData.value.teamName = ''
-  formData.value.captainName = ''
-  formData.value.whatsappNumber = ''
-  formData.value.category = 'POKE'
-  formData.value.rankWeight = '5'
-  updateRankName()
 }
 
 // Live Status state
@@ -755,9 +787,39 @@ const liveStats = ref({
 })
 let liveStatusInterval = null
 
-const handleMatchDecline = () => {
+// ── Tolak Match (oleh user sendiri) ─────────────────────────────
+// Panggil /reject ke backend (kasih tahu lawan via WS)
+// Tampilkan state cancelled di modal (bukan tutup)
+const handleMatchDecline = async () => {
+  const matchUUID = matchData.value.details?.match_uuid
+  const myRequestId = currentRequestId.value
+  if (matchUUID && myRequestId) {
+    await rejectMatch(matchUUID, myRequestId)
+  }
+  cancelReason.value = 'Kamu menolak pertandingan ini.'
+  matchStatus.value = 'cancelled'
+  currentRequestId.value = null
+}
+
+// ── Tombol Tutup modal (dari state confirmed/cancelled) ──────────
+const handleModalClose = () => {
   showMatchModal.value = false
-  addToast("Match declined/expired. You have been placed back to selection.", 'warning')
+  isSearching.value = false
+  selectedCategory.value = null
+  matchStatus.value = 'pending'
+  cancelReason.value = ''
+  currentRequestId.value = null
+}
+
+// ── Tombol Cari Lagi (dari state cancelled) ──────────────────────
+// Reset form dan langsung memulai pencarian dengan data yang sama
+const handleSearchAgain = async () => {
+  showMatchModal.value = false
+  matchStatus.value = 'pending'
+  cancelReason.value = ''
+  currentRequestId.value = null
+  // Langsung mulai cari lagi dengan kategori yang sama
+  await startSearch()
 }
 
 onMounted(() => {

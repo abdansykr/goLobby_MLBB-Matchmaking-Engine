@@ -24,7 +24,7 @@ export function useScrimAPI() {
     // ──────────────────────────────────────────────────────────────
     // WebSocket: Real-time match notification (primary mechanism)
     // ──────────────────────────────────────────────────────────────
-    const connectWebSocket = (requestId, onMatchFound) => {
+    const connectWebSocket = (requestId, onMatchFound, onMatchDeclined, onMatchSuccess) => {
         matchFoundCallback = onMatchFound
 
         // Close any existing connection
@@ -47,12 +47,35 @@ export function useScrimAPI() {
                     const data = JSON.parse(event.data)
                     console.log('📨 WS message:', data)
 
+                    // ── Match Found ──────────────────────────────────
                     if (data.type === 'SCRIM_MATCH_FOUND') {
                         console.log('🎮 Match found via WebSocket!')
                         if (matchFoundCallback) {
                             matchFoundCallback(data)
                         }
                         disconnectWebSocket()
+                    }
+
+                    if (data.type === 'MATCH_SUCCESS') {
+                        console.log('🎉 Match confirmed by ALL users!')
+                        if (onMatchSuccess) onMatchSuccess(data)
+                        disconnectWebSocket()
+                    }
+
+                    // ── Opponent declined the match (legacy single-notify) ──
+                    if (data.type === 'MATCH_DECLINED') {
+                        console.warn('❌ Opponent declined (MATCH_DECLINED):', data.reason)
+                        disconnectWebSocket()
+                        clearPolling()
+                        if (onMatchDeclined) onMatchDeclined(data)
+                    }
+
+                    // ── Canonical: match cancelled, sent to BOTH players ───
+                    if (data.type === 'MATCH_CANCELLED') {
+                        console.warn('🚫 Match cancelled (MATCH_CANCELLED):', data.reason)
+                        disconnectWebSocket()
+                        clearPolling()
+                        if (onMatchDeclined) onMatchDeclined(data)
                     }
                 } catch (e) {
                     console.error('Failed to parse WS message:', e)
@@ -61,13 +84,11 @@ export function useScrimAPI() {
 
             ws.onerror = (err) => {
                 console.warn('⚠️ WebSocket error — falling back to polling:', err)
-                // Graceful degradation: start polling as fallback
                 startPolling(requestId, onMatchFound)
             }
 
             ws.onclose = (event) => {
                 if (event.code !== 1000) {
-                    // Abnormal closure — switch to polling
                     console.warn(`WebSocket closed (code ${event.code}), switching to polling`)
                     startPolling(requestId, onMatchFound)
                 }
@@ -114,7 +135,7 @@ export function useScrimAPI() {
             } catch (err) {
                 console.error('Polling error:', err)
             }
-        }, 3000) // poll every 3 seconds
+        }, 3000)
     }
 
     const clearPolling = () => {
@@ -127,7 +148,7 @@ export function useScrimAPI() {
     // ──────────────────────────────────────────────────────────────
     // API: Create Scrim Request
     // ──────────────────────────────────────────────────────────────
-    const findMatch = async (formData, onMatchFound) => {
+    const findMatch = async (formData, onMatchFound, onMatchDeclined, onMatchSuccess) => {
         loading.value = true
         error.value = null
 
@@ -147,8 +168,7 @@ export function useScrimAPI() {
             const requestId = response.data.request_id || response.data.id
 
             if (requestId) {
-                // Start WebSocket first, polling as fallback
-                connectWebSocket(requestId, onMatchFound)
+                connectWebSocket(requestId, onMatchFound, onMatchDeclined, onMatchSuccess)
             }
 
             return response.data
@@ -179,7 +199,7 @@ export function useScrimAPI() {
     }
 
     // ──────────────────────────────────────────────────────────────
-    // API: Cancel Matchmaking
+    // API: Cancel Matchmaking (while searching)
     // ──────────────────────────────────────────────────────────────
     const cancelMatch = async (requestId) => {
         loading.value = true
@@ -195,6 +215,25 @@ export function useScrimAPI() {
         }
     }
 
+    // ──────────────────────────────────────────────────────────────
+    // API: Reject Match — atomic, broadcasts MATCH_CANCELLED to both players.
+    // Calls POST /api/scrim/match/:id/reject?request_id=<uuid>
+    // ──────────────────────────────────────────────────────────────
+    const rejectMatch = async (matchId, requestId) => {
+        try {
+            disconnectWebSocket()
+            clearPolling()
+            await axios.post(`${API_BASE}/match/${matchId}/reject?request_id=${requestId}`)
+            currentRequest.value = null
+        } catch (err) {
+            // Match may already be expired/cancelled — idempotent, that's OK
+            console.warn('Reject match warning (may already be resolved):', err)
+        }
+    }
+
+    // Legacy — kept for backward compatibility
+    const declineMatch = rejectMatch
+
     // Cleanup on component unmount
     onUnmounted(() => {
         disconnectWebSocket()
@@ -208,6 +247,7 @@ export function useScrimAPI() {
         findMatch,
         checkStatus,
         cancelMatch,
-        disconnectWebSocket
+        declineMatch,  // alias → rejectMatch
+        rejectMatch,
     }
 }

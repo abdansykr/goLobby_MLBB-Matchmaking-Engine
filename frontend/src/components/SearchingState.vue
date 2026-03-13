@@ -42,7 +42,7 @@
       </h3>
       <p class="text-gray-400 text-base">
         Mode: <span class="font-bold" :class="isPoke ? 'text-cyan-magic-300' : 'text-antique-gold-300'">
-          {{ isPoke ? 'Ranked Solo' : 'Pro Scrim' }}
+          {{ isPoke ? 'Solo Ranked' : 'Scrim Pro' }}
         </span>
         <span v-if="isPoke" class="text-gray-500"> · Rank: </span>
         <span v-if="isPoke" class="font-bold text-electric-violet-400">{{ formData.rankName }}</span>
@@ -65,7 +65,7 @@
                :class="isPoke ? 'text-cyan-magic-300' : 'text-antique-gold-300'">
             {{ elapsedDisplay }}
           </div>
-          <div class="stat-label">Elapsed</div>
+          <div class="stat-label">Waktu Berlalu</div>
         </div>
       </div>
 
@@ -83,7 +83,7 @@
                :class="isPoke ? 'text-electric-violet-400' : 'text-antique-gold-400'">
             {{ teamsScanned }}
           </div>
-          <div class="stat-label">Teams Scanned</div>
+          <div class="stat-label">Tim Terpindai</div>
         </div>
       </div>
 
@@ -96,7 +96,7 @@
           </svg>
         </div>
         <div>
-          <div class="stat-value text-green-400 font-['Orbitron'] animate-pulse">LIVE</div>
+          <div class="stat-value text-green-400 font-['Orbitron'] animate-pulse">AKTIF</div>
           <div class="stat-label">Real-time</div>
         </div>
       </div>
@@ -115,7 +115,7 @@
     <div class="activity-log mb-8">
       <div class="activity-header">
         <span class="activity-dot"></span>
-        <span class="text-xs text-gray-500 font-mono tracking-wider">MATCHMAKING LOG</span>
+        <span class="text-xs text-gray-500 font-mono tracking-wider">LOG PENCARIAN</span>
       </div>
       <div class="activity-entries">
         <transition-group name="log-slide">
@@ -141,7 +141,7 @@
              fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
-        Cancel Search
+        Batalkan Pencarian
       </button>
     </div>
 
@@ -168,11 +168,11 @@ const coreGlow = computed(() =>
 
 // ── Cycling status messages ────────────────────────────────────
 const statusMessages = [
-  'Scanning the arena...',
-  'Calibrating rank filters...',
-  'Connecting to opponents...',
-  'Analyzing team rosters...',
-  'Almost there...',
+  'Memindai arena bermain...',
+  'Menyesuaikan filter rank...',
+  'Mencari musuh sepadan...',
+  'Menganalisis data tim...',
+  'Sebentar lagi...',
 ]
 const statusIdx = ref(0)
 

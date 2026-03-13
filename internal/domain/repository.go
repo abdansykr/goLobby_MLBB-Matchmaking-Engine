@@ -42,7 +42,23 @@ type CacheRepository interface {
 	GetTeamLock(ctx context.Context, teamID uuid.UUID) (*uuid.UUID, error)
 	
 	// Match tracking
-	SetMatchPending(ctx context.Context, matchID uuid.UUID, ttl int) error
+	SetMatchPending(ctx context.Context, matchID uuid.UUID, team1RequestID uuid.UUID, team2RequestID uuid.UUID, ttl int) error
 	GetMatchStatus(ctx context.Context, matchID uuid.UUID) (string, error)
+	GetMatchParticipants(ctx context.Context, matchID uuid.UUID) (team1RequestID, team2RequestID string, err error)
+	// CancelMatchAtomically cancels a match only if it is still PENDING.
+	// Returns (true, nil) if this caller was the one who performed the cancellation.
+	// Returns (false, nil) if the match was already cancelled by someone else (idempotent).
+	CancelMatchAtomically(ctx context.Context, matchID uuid.UUID) (cancelled bool, err error)
 	DeleteMatch(ctx context.Context, matchID uuid.UUID) error
+
+	// ── Double Opt-in Consensus ───────────────────────────────────────────
+	// InitConsensus creates a Redis Hash match:{matchID}:consensus with both
+	// participants set to "pending" and a TTL of ttlSeconds.
+	InitConsensus(ctx context.Context, matchID uuid.UUID, requestID1 uuid.UUID, requestID2 uuid.UUID, ttlSeconds int) error
+	// RecordAcceptance marks one participant as "accepted" in the hash.
+	// Returns (allAccepted bool, err). allAccepted is true only when BOTH
+	// participants have accepted — guaranteed atomic via Lua script.
+	RecordAcceptance(ctx context.Context, matchID uuid.UUID, requestID uuid.UUID) (allAccepted bool, err error)
+	// CancelConsensus deletes the consensus hash (used on rejection).
+	CancelConsensus(ctx context.Context, matchID uuid.UUID) error
 }

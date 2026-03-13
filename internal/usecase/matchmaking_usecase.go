@@ -280,8 +280,8 @@ func (uc *MatchmakingUsecase) createMatch(ctx context.Context, team1, team2 *dom
 	_ = uc.teamRepo.Update(ctx, team1)
 	_ = uc.teamRepo.Update(ctx, team2)
 	
-	// Set match as pending in cache
-	_ = uc.cache.SetMatchPending(ctx, match.ID, uc.config.ReadyTimeout)
+	// Set match as pending in cache (also stores both team IDs for conflict-free cancellation)
+	_ = uc.cache.SetMatchPending(ctx, match.ID, team1.ID, team2.ID, uc.config.ReadyTimeout)
 	
 	return match
 }
