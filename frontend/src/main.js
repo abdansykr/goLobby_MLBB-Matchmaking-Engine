@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import './assets/main.css'
 import App from './App.vue'
 import DashboardView from './views/DashboardView.vue'
+import ComingSoonView from './views/ComingSoonView.vue'
 
 // Router configuration
 const router = createRouter({
@@ -12,6 +13,11 @@ const router = createRouter({
             path: '/',
             name: 'dashboard',
             component: DashboardView
+        },
+        {
+            path: '/coming-soon',
+            name: 'coming-soon',
+            component: ComingSoonView
         },
         // Add more routes as needed
         // {
