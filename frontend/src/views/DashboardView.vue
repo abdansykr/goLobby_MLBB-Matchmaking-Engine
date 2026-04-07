@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen pb-10 px-4 relative overflow-x-hidden">
+  <div class="min-h-screen pb-10 px-3 sm:px-4 relative overflow-x-hidden">
     <!-- TRON BACKGROUND LINES -->
     <div class="fixed inset-0 pointer-events-none -z-10 bg-grid-cyan opacity-10"></div>
     
     <!-- TOAST NOTIFICATIONS -->
-    <div class="fixed top-4 right-4 z-[100] flex flex-col gap-3">
+    <div class="fixed top-4 right-3 sm:right-4 z-[100] flex flex-col gap-3 max-w-[calc(100vw-1.5rem)]">
       <transition-group name="toast">
         <div v-for="toast in toasts" :key="toast.id" 
              :class="[
-               'px-6 py-4 rounded-xl border shadow-2xl backdrop-blur-md flex items-center gap-3 w-80',
+               'px-4 py-3 sm:px-6 sm:py-4 rounded-xl border shadow-2xl backdrop-blur-md flex items-center gap-3 w-72 sm:w-80',
                toast.type === 'error' ? 'bg-red-900/40 border-red-500/50 text-red-100 shadow-red-500/20' : 
                toast.type === 'success' ? 'bg-green-900/40 border-green-500/50 text-green-100 shadow-green-500/20' :
                'bg-yellow-900/40 border-yellow-500/50 text-yellow-100 shadow-yellow-500/20'
@@ -22,29 +22,28 @@
 
     <!-- MAIN CONTAINER -->
     <div class="container mx-auto max-w-6xl relative z-10">
-      <!-- Logo Header removed - moved to Navbar -->
 
       <!-- Hero Section -->
-      <div class="mb-12 text-center">
-        <h2 class="text-5xl md:text-6xl font-['Orbitron'] font-black mb-4 gradient-text">
+      <div class="mb-8 sm:mb-12 text-center">
+        <h2 class="text-3xl sm:text-5xl md:text-6xl font-['Orbitron'] font-black mb-3 sm:mb-4 gradient-text leading-tight">
           SCRIM MATCHMAKING
         </h2>
-        <p class="text-xl text-gray-400">
+        <p class="text-base sm:text-xl text-gray-400 px-2">
           Temukan lawan yang sepadan. Buktikan ketangguhanmu.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         <!-- Main Area -->
         <div class="lg:col-span-3">
           
           <!-- STEP 1: Category Selection -->
-          <div v-if="!selectedCategory" class="space-y-6">
-            <h3 class="text-2xl font-bold text-center mb-8">Pilih Tipe Pertandingan</h3>
+          <div v-if="!selectedCategory" class="space-y-4 sm:space-y-6">
+            <h3 class="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-8">Pilih Tipe Pertandingan</h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <!-- POKE Card -->
-              <div class="glass-card p-8 transition-all duration-300">
+              <div class="glass-card p-6 sm:p-8 transition-all duration-300">
                 <div class="text-center space-y-4">
                   <!-- Icon -->
                   <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-electric-violet-500 to-electric-violet-700 flex items-center justify-center shadow-glow-violet transition-transform">
@@ -142,7 +141,7 @@
           </div>
 
           <!-- STEP 2a: POKE Form -->
-          <div v-else-if="selectedCategory === 'POKE'" class="glass-card p-8 md:p-12 relative">
+          <div v-else-if="selectedCategory === 'POKE'" class="glass-card p-5 sm:p-8 md:p-12 relative">
             <div v-if="loadingApi" class="absolute inset-0 flex items-center justify-center bg-black/50 z-20 rounded-2xl">
               <div class="w-16 h-16 border-4 border-electric-violet-500 border-t-cyan-magic-400 rounded-full animate-spin"></div>
             </div>
@@ -260,7 +259,7 @@
           </div>
 
           <!-- STEP 2b: WARKOP Form -->
-          <div v-else-if="selectedCategory === 'WARKOP'" class="glass-card p-8 md:p-12 relative">
+          <div v-else-if="selectedCategory === 'WARKOP'" class="glass-card p-5 sm:p-8 md:p-12 relative">
             <div v-if="loadingApi" class="absolute inset-0 flex items-center justify-center bg-black/50 z-20 rounded-2xl">
               <div class="w-16 h-16 border-4 border-antique-gold-400 border-t-cyan-magic-400 rounded-full animate-spin"></div>
             </div>
@@ -386,7 +385,7 @@
 
         <!-- Live Server Status Sidebar -->
         <div class="lg:col-span-1">
-          <div class="glass-card p-6 sticky top-28 h-fit border border-white/5 backdrop-blur-2xl bg-midnight-900/30 shadow-2xl">
+          <div class="glass-card p-5 sm:p-6 lg:sticky lg:top-28 h-fit border border-white/5 backdrop-blur-2xl bg-midnight-900/30 shadow-2xl">
             <!-- Header with Live Indicator -->
             <div class="flex items-center justify-between mb-6">
               <h4 class="text-lg font-bold flex items-center gap-3">
@@ -465,7 +464,7 @@
           </svg>
           Catatan Pertandingan Scrim Terkini
         </h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <div v-for="(match, index) in recentMatches" 
             :key="index"
             class="glass p-4 rounded-lg hover:shadow-glow-violet transition-all">
@@ -508,13 +507,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import axios from 'axios'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useScrimAPI } from '@/composables/useScrimAPI'
+import { useAuth } from '@/composables/useAuth'
 import MatchFoundModal from '@/components/MatchFoundModal.vue'
 import SearchingState from '@/components/SearchingState.vue'
 
-const { findMatch, checkStatus, cancelMatch, rejectMatch, loading: loadingApi, error: errorApi } = useScrimAPI()
+const { findMatch, checkStatus, cancelMatch, confirmMatch, rejectMatch, loading: loadingApi, error: errorApi } = useScrimAPI()
+const { isLoggedIn, user } = useAuth()
 
 // Toasts System
 const toasts = ref([])
@@ -549,6 +549,13 @@ const formData = ref({
   rankName: 'Epic'
 })
 
+// Auto-fill whatsappNumber globally. Nicknames are filled adaptively based on category
+watch(() => user.value, (u) => {
+  if (u) {
+    if (!formData.value.whatsappNumber) formData.value.whatsappNumber = u.whatsapp_number || ''
+  }
+}, { immediate: true })
+
 // WhatsApp Validation
 const isValidWhatsApp = computed(() => {
   const wa = formData.value.whatsappNumber.trim()
@@ -582,6 +589,16 @@ const selectCategory = (category) => {
   selectedCategory.value = category
   formData.value.category = category
   
+  if (user.value) {
+    if (category === 'POKE') {
+      if (!formData.value.teamName) formData.value.teamName = user.value.username || ''
+    } else if (category === 'WARKOP') {
+      if (!formData.value.captainName) formData.value.captainName = user.value.username || ''
+      // If teamName was Auto-filled from POKE, clear it so they can input their Squad Name
+      if (formData.value.teamName === user.value.username) formData.value.teamName = ''
+    }
+  }
+
   if (category === 'WARKOP') {
     formData.value.rankWeight = '10'
     formData.value.rankName = 'Pro Scrim'
@@ -634,12 +651,12 @@ const startSearch = async () => {
         matchData.value = {
           yourTeam: {
             name: formData.value.teamName,
-            avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${formData.value.teamName}`,
+            avatar: user.value?.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${formData.value.teamName}`,
             rank: formData.value.rankName
           },
           opponentTeam: {
             name: match.opponent_name || 'Tim Lawan',
-            avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${match.opponent_name}`,
+            avatar: match.opponent_avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${match.opponent_name}`,
             rank: formData.value.category === 'WARKOP' ? 'Pro Scrim' : 'Similar Rank'
           },
           details: {
@@ -715,12 +732,12 @@ const startPolling = (requestId) => {
          matchData.value = {
             yourTeam: {
                name: formData.value.teamName,
-               avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${formData.value.teamName}`,
+               avatar: user.value?.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${formData.value.teamName}`,
                rank: formData.value.rankName
             },
             opponentTeam: {
                name: match.opponent_name || 'Opponent Team',
-               avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${match.opponent_name}`,
+               avatar: match.opponent_avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${match.opponent_name}`,
                rank: formData.value.category === 'WARKOP' ? 'Pro Scrim' : 'Similar Rank'
             },
             details: {
@@ -759,7 +776,7 @@ const cancelSearch = async () => {
 }
 
 // ── Terima Match ─────────────────────────────────────────────────
-// 1. Panggil endpoint /confirm ke backend
+// 1. Panggil endpoint /confirm ke backend (via apiClient — JWT safe)
 // 2. Ubah matchStatus → 'waiting' selagi menunggu lawan
 // 3. Modal tetap terbuka
 const handleMatchAccept = async () => {
@@ -770,12 +787,7 @@ const handleMatchAccept = async () => {
   matchStatus.value = 'waiting'
 
   if (matchUUID && myRequestId) {
-    try {
-      await axios.post(`/api/scrim/match/${matchUUID}/confirm?request_id=${myRequestId}`)
-    } catch (err) {
-      // Backend error (mis. sudah confirmed/expired) — biarkan UI handle error/timeout
-      console.warn('Confirm match error:', err)
-    }
+    await confirmMatch(matchUUID, myRequestId)
   }
 }
 

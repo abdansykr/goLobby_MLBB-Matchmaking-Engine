@@ -380,7 +380,7 @@ func (u *ScrimMatchmakingUsecase) GetRequest(ctx context.Context, id uuid.UUID) 
 			oppNumber := "TERSEMBUNYI"
 			if match.Status == "confirmed" {
 				oppNumber = opponent.WhatsAppNumber
-				message := fmt.Sprintf("Hi %s! We've been matched for a scrim. Let's coordinate the match details!", opponent.TeamName)
+				message := fmt.Sprintf("Halo %s! Kita sudah di-match untuk scrim nih. Ayo kita bahas detail pertandingannya!", opponent.TeamName)
 				waURL = fmt.Sprintf("https://wa.me/%s?text=%s", opponent.WhatsAppNumber, url.QueryEscape(message))
 			}
 
@@ -390,11 +390,12 @@ func (u *ScrimMatchmakingUsecase) GetRequest(ctx context.Context, id uuid.UUID) 
 			}
 
 			matchResponse = &domain.MatchResponse{
-				Match:          match,
-				OpponentName:   opponent.TeamName,
-				OpponentNumber: oppNumber,
-				WhatsAppURL:    waURL,
-				ExpiresIn:      expiresIn,
+				Match:             match,
+				OpponentName:      opponent.TeamName,
+				OpponentNumber:    oppNumber,
+				OpponentAvatarURL: opponent.AvatarURL,
+				WhatsAppURL:       waURL,
+				ExpiresIn:         expiresIn,
 			}
 		}
 	}
@@ -654,10 +655,10 @@ func (u *ScrimMatchmakingUsecase) ConfirmMatch(ctx context.Context, matchID uuid
 		}
 
 		// Notify both parties with MATCH_SUCCESS and WhatsApp URLs
-		msg1 := fmt.Sprintf("Hi %s! We've been matched for a scrim. Let's coordinate the match details!", match.Team2.TeamName)
+		msg1 := fmt.Sprintf("Halo %s! Kita sudah di-match untuk scrim nih. Ayo kita bahas detail pertandingannya!", match.Team2.TeamName)
 		waURL1 := fmt.Sprintf("https://wa.me/%s?text=%s", match.Team2.WhatsAppNumber, url.QueryEscape(msg1))
 
-		msg2 := fmt.Sprintf("Hi %s! We've been matched for a scrim. Let's coordinate the match details!", match.Team1.TeamName)
+		msg2 := fmt.Sprintf("Halo %s! Kita sudah di-match untuk scrim nih. Ayo kita bahas detail pertandingannya!", match.Team1.TeamName)
 		waURL2 := fmt.Sprintf("https://wa.me/%s?text=%s", match.Team1.WhatsAppNumber, url.QueryEscape(msg2))
 
 		go u.notifyWS(match.Team1ID.String(), map[string]interface{}{

@@ -22,9 +22,9 @@ func NewScrimRequestRepository(db *sql.DB) *ScrimRequestRepository {
 func (r *ScrimRequestRepository) Create(ctx context.Context, request *domain.ScrimRequest) error {
 	query := `
 		INSERT INTO scrim_requests (
-			id, team_name, whatsapp_number, category, rank_weight, 
+			id, team_name, whatsapp_number, avatar_url, category, rank_weight, 
 			status, ip_address, created_at, updated_at, expires_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, created_at, updated_at, expires_at
 	`
 
@@ -40,6 +40,7 @@ func (r *ScrimRequestRepository) Create(ctx context.Context, request *domain.Scr
 		request.ID,
 		request.TeamName,
 		request.WhatsAppNumber,
+		request.AvatarURL,
 		request.Category,
 		request.RankWeight,
 		request.Status,
@@ -59,7 +60,7 @@ func (r *ScrimRequestRepository) Create(ctx context.Context, request *domain.Scr
 // GetByID retrieves a scrim request by ID
 func (r *ScrimRequestRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.ScrimRequest, error) {
 	query := `
-		SELECT id, team_name, whatsapp_number, category, rank_weight, 
+		SELECT id, team_name, whatsapp_number, avatar_url, category, rank_weight, 
 			   status, match_id, ip_address, created_at, updated_at, 
 			   expires_at, matched_at
 		FROM scrim_requests
@@ -71,6 +72,7 @@ func (r *ScrimRequestRepository) GetByID(ctx context.Context, id uuid.UUID) (*do
 		&request.ID,
 		&request.TeamName,
 		&request.WhatsAppNumber,
+		&request.AvatarURL,
 		&request.Category,
 		&request.RankWeight,
 		&request.Status,
@@ -95,7 +97,7 @@ func (r *ScrimRequestRepository) GetByID(ctx context.Context, id uuid.UUID) (*do
 // GetSearchingByCategory retrieves all searching requests for a category
 func (r *ScrimRequestRepository) GetSearchingByCategory(ctx context.Context, category domain.ScrimCategory) ([]*domain.ScrimRequest, error) {
 	query := `
-		SELECT id, team_name, whatsapp_number, category, rank_weight, 
+		SELECT id, team_name, whatsapp_number, avatar_url, category, rank_weight, 
 			   status, match_id, ip_address, created_at, updated_at, 
 			   expires_at, matched_at
 		FROM scrim_requests
@@ -116,6 +118,7 @@ func (r *ScrimRequestRepository) GetSearchingByCategory(ctx context.Context, cat
 			&request.ID,
 			&request.TeamName,
 			&request.WhatsAppNumber,
+			&request.AvatarURL,
 			&request.Category,
 			&request.RankWeight,
 			&request.Status,
@@ -138,7 +141,7 @@ func (r *ScrimRequestRepository) GetSearchingByCategory(ctx context.Context, cat
 // GetAllSearching retrieves ALL searching requests (any category)
 func (r *ScrimRequestRepository) GetAllSearching(ctx context.Context) ([]*domain.ScrimRequest, error) {
 	query := `
-		SELECT id, team_name, whatsapp_number, category, rank_weight, 
+		SELECT id, team_name, whatsapp_number, avatar_url, category, rank_weight, 
 			   status, match_id, ip_address, created_at, updated_at, 
 			   expires_at, matched_at
 		FROM scrim_requests
@@ -159,6 +162,7 @@ func (r *ScrimRequestRepository) GetAllSearching(ctx context.Context) ([]*domain
 			&request.ID,
 			&request.TeamName,
 			&request.WhatsAppNumber,
+			&request.AvatarURL,
 			&request.Category,
 			&request.RankWeight,
 			&request.Status,
@@ -187,7 +191,7 @@ func (r *ScrimRequestRepository) FindPotentialMatches(ctx context.Context, reque
 		// Special case: Rank 9 (Classic/Fun) - exact match only
 		if request.RankWeight == 9 {
 			query = `
-				SELECT id, team_name, whatsapp_number, category, rank_weight, 
+				SELECT id, team_name, whatsapp_number, avatar_url, category, rank_weight, 
 					   status, match_id, ip_address, created_at, updated_at, 
 					   expires_at, matched_at
 				FROM scrim_requests
@@ -208,7 +212,7 @@ func (r *ScrimRequestRepository) FindPotentialMatches(ctx context.Context, reque
 		} else {
 			// POKE: rank tolerance ±1 (for ranks 1-8)
 			query = `
-				SELECT id, team_name, whatsapp_number, category, rank_weight, 
+				SELECT id, team_name, whatsapp_number, avatar_url, category, rank_weight, 
 					   status, match_id, ip_address, created_at, updated_at, 
 					   expires_at, matched_at
 				FROM scrim_requests
@@ -231,7 +235,7 @@ func (r *ScrimRequestRepository) FindPotentialMatches(ctx context.Context, reque
 	} else {
 		// WARKOP: no rank tolerance, match anyone
 		query = `
-			SELECT id, team_name, whatsapp_number, category, rank_weight, 
+			SELECT id, team_name, whatsapp_number, avatar_url, category, rank_weight, 
 				   status, match_id, ip_address, created_at, updated_at, 
 				   expires_at, matched_at
 			FROM scrim_requests
@@ -262,6 +266,7 @@ func (r *ScrimRequestRepository) FindPotentialMatches(ctx context.Context, reque
 			&match.ID,
 			&match.TeamName,
 			&match.WhatsAppNumber,
+			&match.AvatarURL,
 			&match.Category,
 			&match.RankWeight,
 			&match.Status,

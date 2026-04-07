@@ -232,6 +232,28 @@
   .glass-strong {
     @apply bg-white/15 backdrop-blur-xl;
   }
+
+  /* ── Mobile Responsive Utilities ─────────────────────────────────── */
+
+  /* Responsive container padding */
+  .page-container {
+    @apply max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+  }
+
+  /* Responsive heading sizes */
+  .heading-xl {
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-['Orbitron'];
+  }
+
+  /* Responsive card grid */
+  .grid-match-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6;
+  }
+
+  /* Compact button for mobile */
+  .btn-magic-sm {
+    @apply btn-magic px-4 py-2.5 text-sm sm:px-8 sm:py-4 sm:text-lg;
+  }
 }
 
 /* Custom Scrollbar (for Chat) */

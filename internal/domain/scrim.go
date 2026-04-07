@@ -29,6 +29,7 @@ type ScrimRequest struct {
 	ID             uuid.UUID     `json:"id" db:"id"`
 	TeamName       string        `json:"team_name" db:"team_name"`
 	WhatsAppNumber string        `json:"whatsapp_number" db:"whatsapp_number"`
+	AvatarURL      string        `json:"avatar_url" db:"avatar_url"`
 	Category       ScrimCategory `json:"category" db:"category"`
 	RankWeight     int           `json:"rank_weight" db:"rank_weight"` // 1-10
 	Status         ScrimStatus   `json:"status" db:"status"`
@@ -119,7 +120,7 @@ func (sr *ScrimRequest) CanMatchWith(other *ScrimRequest) bool {
 
 // GetWhatsAppURL generates WhatsApp URL for contacting opponent
 func (sr *ScrimRequest) GetWhatsAppURL(opponentName string) string {
-	message := "Hi " + opponentName + "! We've been matched for a scrim. Let's coordinate the match details!"
+	message := "Halo " + opponentName + "! Kita sudah di-match untuk scrim nih. Ayo kita bahas detail pertandingannya!"
 	return "https://wa.me/" + sr.WhatsAppNumber + "?text=" + urlEncode(message)
 }
 
@@ -155,8 +156,9 @@ func urlEncode(s string) string {
 // MatchResponse represents the response when a match is found
 type MatchResponse struct {
 	Match          *ScrimMatch `json:"match"`
-	OpponentName   string      `json:"opponent_name"`
-	OpponentNumber string      `json:"opponent_number"`
-	WhatsAppURL    string      `json:"whatsapp_url"`
-	ExpiresIn      int         `json:"expires_in"` // seconds
+	OpponentName      string      `json:"opponent_name"`
+	OpponentNumber    string      `json:"opponent_number"`
+	OpponentAvatarURL string      `json:"opponent_avatar_url"`
+	WhatsAppURL       string      `json:"whatsapp_url"`
+	ExpiresIn         int         `json:"expires_in"` // seconds
 }

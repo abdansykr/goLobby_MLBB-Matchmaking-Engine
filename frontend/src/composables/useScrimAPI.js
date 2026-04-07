@@ -1,12 +1,9 @@
 import { ref, onUnmounted } from 'vue'
-import axios from 'axios'
+import apiClient from '../utils/api'
 
 const API_BASE = '/api/scrim'
 
 // Auto-deteksi protokol WebSocket berdasarkan halaman yang sedang dibuka.
-// - Jika browser buka https:// (production/Cloudflare) → pakai wss://
-// - Jika browser buka http:// (lokal) → pakai ws://
-// VITE_WS_URL dari .env akan selalu diutamakan jika ada.
 const _wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
 const _wsHost = window.location.host
 const WS_BASE = import.meta.env.VITE_WS_URL || `${_wsProtocol}//${_wsHost}/ws`
@@ -146,7 +143,7 @@ export function useScrimAPI() {
     }
 
     // ──────────────────────────────────────────────────────────────
-    // API: Create Scrim Request
+    // API: Create Scrim Request  (uses apiClient → JWT auto-attached)
     // ──────────────────────────────────────────────────────────────
     const findMatch = async (formData, onMatchFound, onMatchDeclined, onMatchSuccess) => {
         loading.value = true
@@ -161,7 +158,7 @@ export function useScrimAPI() {
             }
 
             console.log('📤 Sending matchmaking request:', payload)
-            const response = await axios.post(`${API_BASE}/request`, payload)
+            const response = await apiClient.post(`${API_BASE}/request`, payload)
             console.log('📥 Request accepted:', response.data)
 
             currentRequest.value = response.data
@@ -186,11 +183,11 @@ export function useScrimAPI() {
     }
 
     // ──────────────────────────────────────────────────────────────
-    // API: Poll Request Status (also used as WS fallback)
+    // API: Poll Request Status  (uses apiClient → JWT auto-attached)
     // ──────────────────────────────────────────────────────────────
     const checkStatus = async (requestId) => {
         try {
-            const response = await axios.get(`${API_BASE}/request/${requestId}`)
+            const response = await apiClient.get(`${API_BASE}/request/${requestId}`)
             return response.data
         } catch (err) {
             console.error('Status check error:', err)
@@ -206,7 +203,7 @@ export function useScrimAPI() {
         try {
             disconnectWebSocket()
             clearPolling()
-            await axios.post(`${API_BASE}/request/${requestId}/cancel`)
+            await apiClient.post(`${API_BASE}/request/${requestId}/cancel`)
             currentRequest.value = null
         } catch (err) {
             console.error('Cancel error:', err)
@@ -216,14 +213,24 @@ export function useScrimAPI() {
     }
 
     // ──────────────────────────────────────────────────────────────
+    // API: Confirm Match  (uses apiClient → JWT auto-attached)
+    // ──────────────────────────────────────────────────────────────
+    const confirmMatch = async (matchId, requestId) => {
+        try {
+            await apiClient.post(`${API_BASE}/match/${matchId}/confirm?request_id=${requestId}`)
+        } catch (err) {
+            console.warn('Confirm match warning (may already be resolved):', err)
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────
     // API: Reject Match — atomic, broadcasts MATCH_CANCELLED to both players.
-    // Calls POST /api/scrim/match/:id/reject?request_id=<uuid>
     // ──────────────────────────────────────────────────────────────
     const rejectMatch = async (matchId, requestId) => {
         try {
             disconnectWebSocket()
             clearPolling()
-            await axios.post(`${API_BASE}/match/${matchId}/reject?request_id=${requestId}`)
+            await apiClient.post(`${API_BASE}/match/${matchId}/reject?request_id=${requestId}`)
             currentRequest.value = null
         } catch (err) {
             // Match may already be expired/cancelled — idempotent, that's OK
@@ -247,6 +254,7 @@ export function useScrimAPI() {
         findMatch,
         checkStatus,
         cancelMatch,
+        confirmMatch,
         declineMatch,  // alias → rejectMatch
         rejectMatch,
     }

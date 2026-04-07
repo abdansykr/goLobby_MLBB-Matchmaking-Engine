@@ -16,6 +16,7 @@ import (
 	"github.com/golobby/matchmaking/internal/database"
 	httpHandler "github.com/golobby/matchmaking/internal/delivery/http"
 	appLogger "github.com/golobby/matchmaking/internal/logger"
+	"github.com/golobby/matchmaking/internal/middleware"
 	"github.com/golobby/matchmaking/internal/repository"
 	"github.com/golobby/matchmaking/internal/usecase"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -60,6 +61,7 @@ func main() {
 	scrimRequestRepo := repository.NewScrimRequestRepository(db)
 	scrimMatchRepo   := repository.NewScrimMatchRepository(db)
 	rateLimiter      := repository.NewRedisRateLimiter(redisClient)
+	userRepo         := repository.NewUserRepository(db)
 
 	// ── Matchmaking Usecase ────────────────────────────────────────────
 	matchmakingConfig := usecase.MatchmakingConfig{
@@ -103,6 +105,9 @@ func main() {
 	matchmakingHandler := httpHandler.NewMatchmakingHandler(matchmakingUsecase, wsHub)
 	scrimHandler       := httpHandler.NewScrimHandler(scrimUsecase, wsHub)
 	ocrHandler         := httpHandler.NewOCRHandler(wsHub)
+	authHandler        := httpHandler.NewAuthHandler(userRepo, cfg.JWT.Secret)
+	profileHandler     := httpHandler.NewProfileHandler(userRepo)
+	authMiddleware     := middleware.NewAuthMiddleware(cfg.JWT.Secret)
 
 	// ── Fiber App ──────────────────────────────────────────────────────
 	app := fiber.New(fiber.Config{
@@ -123,6 +128,7 @@ func main() {
 	}))
 
 	// ── Routes ─────────────────────────────────────────────────────────
+	app.Static("/uploads", "./uploads")
 	app.Get("/health", matchmakingHandler.HealthCheck)
 
 	api := app.Group("/api")
@@ -132,6 +138,8 @@ func main() {
 	matchmaking.Post("/ready",   matchmakingHandler.ConfirmReady)
 	matchmaking.Post("/cancel",  matchmakingHandler.CancelMatchmaking)
 
+	httpHandler.RegisterAuthRoutes(app, authHandler)
+	httpHandler.RegisterProfileRoutes(app, profileHandler, authMiddleware)
 	httpHandler.RegisterScrimRoutes(app, scrimHandler)
 	httpHandler.RegisterOCRRoutes(app, ocrHandler)
 

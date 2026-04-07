@@ -84,6 +84,7 @@ func (h *ScrimHandler) CreateRequest(c *fiber.Ctx) error {
 	// Extract values (support both camelCase and snake_case)
 	teamName := getStringValue(rawData, "teamName", "team_name")
 	whatsappNumber := getStringValue(rawData, "whatsappNumber", "whatsapp_number")
+	avatarURL := getStringValue(rawData, "avatarUrl", "avatar_url")
 	category := getStringValue(rawData, "category")
 	rankWeight := getIntValue(rawData, "rankWeight", "rank_weight")
 
@@ -145,6 +146,7 @@ func (h *ScrimHandler) CreateRequest(c *fiber.Ctx) error {
 	request := &domain.ScrimRequest{
 		TeamName:       teamName,
 		WhatsAppNumber: whatsappNumber,
+		AvatarURL:      avatarURL,
 		Category:       domain.ScrimCategory(category),
 		RankWeight:     rankWeight,
 		IPAddress:      ipAddress,
@@ -338,12 +340,13 @@ func (h *ScrimHandler) RejectMatch(c *fiber.Ctx) error {
 // notifyMatchFound sends WebSocket notification for match found
 func (h *ScrimHandler) notifyMatchFound(requestID string, matchResponse *domain.MatchResponse) {
 	message := map[string]interface{}{
-		"type":            "SCRIM_MATCH_FOUND",
-		"match_id":        matchResponse.Match.ID,
-		"opponent_name":   matchResponse.OpponentName,
-		"opponent_number": matchResponse.OpponentNumber,
-		"whatsapp_url":    matchResponse.WhatsAppURL,
-		"expires_in":      matchResponse.ExpiresIn,
+		"type":                "SCRIM_MATCH_FOUND",
+		"match_id":            matchResponse.Match.ID,
+		"opponent_name":       matchResponse.OpponentName,
+		"opponent_number":     matchResponse.OpponentNumber,
+		"opponent_avatar_url": matchResponse.OpponentAvatarURL,
+		"whatsapp_url":        matchResponse.WhatsAppURL,
+		"expires_in":          matchResponse.ExpiresIn,
 	}
 
 	h.wsHub.BroadcastToClient(requestID, message)
