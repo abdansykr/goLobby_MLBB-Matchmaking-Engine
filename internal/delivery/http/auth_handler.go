@@ -114,6 +114,59 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	})
 }
 
+// ─── Reset Password ───────────────────────────────────────────────────────────
+
+// ResetPassword handles POST /api/auth/reset-password
+// Verifies email + username match, then sets a new password.
+func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
+	var req struct {
+		Email       string `json:"email"`
+		Username    string `json:"username"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	req.Email       = strings.TrimSpace(strings.ToLower(req.Email))
+	req.Username    = strings.TrimSpace(req.Username)
+	req.NewPassword = strings.TrimSpace(req.NewPassword)
+
+	if req.Email == "" || req.Username == "" || req.NewPassword == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Email, username, dan password baru wajib diisi"})
+	}
+	if len(req.NewPassword) < 6 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Password baru minimal 6 karakter"})
+	}
+
+	// Find user by email
+	user, err := h.userRepo.FindByEmail(c.Context(), req.Email)
+	if err == sql.ErrNoRows || user == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Email atau username tidak cocok"})
+	}
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Terjadi kesalahan server"})
+	}
+
+	// Verify username matches
+	if !strings.EqualFold(user.Username, req.Username) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Email atau username tidak cocok"})
+	}
+
+	// Hash and save new password
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal memproses password"})
+	}
+	user.PasswordHash = string(newHash)
+
+	if err := h.userRepo.UpdatePasswordHash(c.Context(), user.ID, string(newHash)); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal menyimpan password baru"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Password berhasil direset. Silakan login."})
+}
+
 // ─── Login ───────────────────────────────────────────────────────────────────
 
 // Login handles POST /api/auth/login
@@ -180,11 +233,10 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	})
 }
 
-// ─── Route registration ───────────────────────────────────────────────────────
-
-// RegisterAuthRoutes registers POST /api/auth/register and POST /api/auth/login.
+// RegisterAuthRoutes registers auth endpoints.
 func RegisterAuthRoutes(app *fiber.App, handler *AuthHandler) {
 	auth := app.Group("/api/auth")
 	auth.Post("/register", handler.Register)
 	auth.Post("/login", handler.Login)
+	auth.Post("/reset-password", handler.ResetPassword)
 }

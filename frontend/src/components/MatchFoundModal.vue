@@ -11,7 +11,7 @@
          STATE 1: LAWAN DITEMUKAN (pending / confirmed)
          ═══════════════════════════════════════════════ -->
     <div v-if="isVisible && internalStatus !== 'cancelled'" class="modal-overlay">
-      <div class="relative max-w-4xl w-full mx-4">
+      <div class="relative max-w-2xl w-full mx-4">
         <!-- Countdown Timer Bar -->
         <div class="mb-4">
           <div class="flex items-center justify-between text-sm mb-2">
@@ -32,7 +32,7 @@
         </div>
 
         <!-- Main Modal Card -->
-        <div class="glass-card p-8 md:p-12 relative overflow-hidden">
+        <div class="glass-card p-6 md:p-8 relative overflow-hidden">
           <!-- Dramatic Background Effects -->
           <div class="absolute inset-0 opacity-10">
             <div class="absolute top-0 left-0 w-96 h-96 bg-electric-violet-500 rounded-full blur-3xl animate-pulse"></div>
@@ -45,17 +45,17 @@
               <div class="inline-block px-6 py-2 bg-gradient-magic rounded-full mb-4 animate-pulse-slow">
                 <p class="text-sm font-bold tracking-widest">PERSIAPAN MABAR</p>
               </div>
-              <h2 class="text-2xl md:text-3xl font-bold text-glow">
+              <h2 class="text-xl md:text-2xl font-bold text-glow">
                 {{ internalStatus === 'confirmed' ? '✅ Pertandingan Dikonfirmasi!' : internalStatus === 'waiting' ? 'Menunggu Lawan...' : 'Lawan Ditemukan!' }}
               </h2>
             </div>
 
             <!-- VS Screen -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-6">
               <!-- Your Team -->
-              <div class="text-center space-y-4 animate-float">
+              <div class="text-center space-y-2 animate-float">
                 <div class="relative inline-block">
-                  <div class="avatar-hexagon mx-auto w-32 h-32 shadow-glow-violet">
+                  <div class="avatar-hexagon mx-auto w-24 h-24 shadow-glow-violet">
                     <img :src="yourTeam.avatar" :alt="yourTeam.name" />
                   </div>
                   <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
@@ -68,7 +68,7 @@
                   </div>
                 </div>
                 <div>
-                  <p class="text-xl font-bold">{{ yourTeam.name }}</p>
+                  <p class="text-lg font-bold">{{ yourTeam.name }}</p>
                   <p class="text-sm text-gray-400">Tim Anda</p>
                 </div>
               </div>
@@ -85,9 +85,9 @@
               </div>
 
               <!-- Opponent Team -->
-              <div class="text-center space-y-4 animate-float" style="animation-delay: 0.2s">
+              <div class="text-center space-y-2 animate-float" style="animation-delay: 0.2s">
                 <div class="relative inline-block">
-                  <div class="avatar-hexagon mx-auto w-32 h-32 shadow-glow-cyan">
+                  <div class="avatar-hexagon mx-auto w-24 h-24 shadow-glow-cyan">
                     <img :src="opponentTeam.avatar" :alt="opponentTeam.name" />
                   </div>
                   <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
@@ -100,14 +100,14 @@
                   </div>
                 </div>
                 <div>
-                  <p class="text-xl font-bold">{{ opponentTeam.name }}</p>
+                  <p class="text-lg font-bold">{{ opponentTeam.name }}</p>
                   <p class="text-sm text-gray-400">Tim Lawan</p>
                 </div>
               </div>
             </div>
 
             <!-- Match Details -->
-            <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="grid grid-cols-3 gap-2 mb-6">
               <div class="glass p-4 rounded-lg text-center">
                 <p class="text-xs text-gray-400 mb-1">Kategori</p>
                 <p class="font-bold text-cyan-magic-300">{{ matchDetails.category }}</p>

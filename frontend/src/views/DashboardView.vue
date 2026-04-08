@@ -503,6 +503,13 @@
       @close="handleModalClose"
       @search-again="handleSearchAgain"
     />
+
+    <!-- Login Gate Modal (for POKE) -->
+    <AuthModal
+      :isVisible="showLocalAuthModal"
+      @close="showLocalAuthModal = false"
+      @success="() => { showLocalAuthModal = false; selectCategory('POKE') }"
+    />
   </div>
 </template>
 
@@ -512,6 +519,7 @@ import { useScrimAPI } from '@/composables/useScrimAPI'
 import { useAuth } from '@/composables/useAuth'
 import MatchFoundModal from '@/components/MatchFoundModal.vue'
 import SearchingState from '@/components/SearchingState.vue'
+import AuthModal from '@/components/AuthModal.vue'
 
 const { findMatch, checkStatus, cancelMatch, confirmMatch, rejectMatch, loading: loadingApi, error: errorApi } = useScrimAPI()
 const { isLoggedIn, user } = useAuth()
@@ -536,6 +544,7 @@ const removeToast = (id) => {
 const selectedCategory = ref(null)
 const isSearching = ref(false)
 const showMatchModal = ref(false)
+const showLocalAuthModal = ref(false)
 const currentRequestId = ref(null)
 let pollInterval = null
 
@@ -586,15 +595,20 @@ const isValidFormWarkop = computed(() => {
 })
 
 const selectCategory = (category) => {
+  // POKE mode requires user to be logged in
+  if (category === 'POKE' && !isLoggedIn.value) {
+    showLocalAuthModal.value = true
+    return
+  }
+
   selectedCategory.value = category
   formData.value.category = category
-  
+
   if (user.value) {
     if (category === 'POKE') {
       if (!formData.value.teamName) formData.value.teamName = user.value.username || ''
     } else if (category === 'WARKOP') {
       if (!formData.value.captainName) formData.value.captainName = user.value.username || ''
-      // If teamName was Auto-filled from POKE, clear it so they can input their Squad Name
       if (formData.value.teamName === user.value.username) formData.value.teamName = ''
     }
   }

@@ -5,7 +5,7 @@
       <div class="container mx-auto px-3 sm:px-4 h-16 sm:h-20 flex items-center justify-between gap-3">
 
         <!-- Logo & Brand -->
-        <router-link to="/" class="flex items-center gap-2 sm:gap-4 group cursor-pointer shrink-0">
+        <a href="/" class="flex items-center gap-2 sm:gap-4 group cursor-pointer shrink-0" @click="() => { window.location.href = '/' }">
           <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-magic flex items-center justify-center shadow-glow-violet group-hover:scale-110 transition-transform duration-300">
             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -15,7 +15,7 @@
             <h1 class="text-lg sm:text-2xl font-['Orbitron'] font-black tracking-wider text-white group-hover:text-cyan-magic-300 transition-colors leading-tight">GOLOBBY</h1>
             <span class="text-[8px] sm:text-[10px] text-cyan-magic-400 font-bold tracking-[0.2em] uppercase -mt-0.5">Scrim Arena</span>
           </div>
-        </router-link>
+        </a>
 
         <!-- Action & Identity -->
         <div class="flex items-center gap-1.5 sm:gap-3 ml-auto">

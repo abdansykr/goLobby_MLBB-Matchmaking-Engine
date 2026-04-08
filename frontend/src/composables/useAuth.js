@@ -98,5 +98,30 @@ export function useAuth() {
         }
     }
 
-    return { isLoggedIn, user, token, register, login, logout, updateProfile, uploadAvatar }
+    const changePassword = async ({ currentPassword, newPassword }) => {
+        try {
+            const res = await apiClient.put('/api/user/password', {
+                current_password: currentPassword,
+                new_password: newPassword
+            })
+            return res.data
+        } catch (err) {
+            throw new Error(err.response?.data?.error || 'Gagal mengubah password')
+        }
+    }
+
+    const resetPassword = async ({ email, username, newPassword }) => {
+        try {
+            const res = await apiClient.post('/api/auth/reset-password', {
+                email,
+                username,
+                new_password: newPassword
+            })
+            return res.data
+        } catch (err) {
+            throw new Error(err.response?.data?.error || 'Gagal mereset password')
+        }
+    }
+
+    return { isLoggedIn, user, token, register, login, logout, updateProfile, uploadAvatar, changePassword, resetPassword }
 }

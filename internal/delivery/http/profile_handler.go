@@ -1,6 +1,7 @@
 package http
 
 import (
+	"database/sql"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/golobby/matchmaking/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ProfileHandler struct {
@@ -134,9 +136,63 @@ func (h *ProfileHandler) UploadAvatar(c *fiber.Ctx) error {
 	})
 }
 
+// ChangePassword handles PUT /api/user/password
+func (h *ProfileHandler) ChangePassword(c *fiber.Ctx) error {
+	userIDStr := c.Locals("user_id").(string)
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user ID"})
+	}
+
+	var req struct {
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	req.CurrentPassword = strings.TrimSpace(req.CurrentPassword)
+	req.NewPassword = strings.TrimSpace(req.NewPassword)
+
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Password lama dan baru wajib diisi"})
+	}
+	if len(req.NewPassword) < 6 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Password baru minimal 6 karakter"})
+	}
+
+	user, err := h.userRepo.FindByID(c.Context(), userID)
+	if err == sql.ErrNoRows || user == nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User tidak ditemukan"})
+	}
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Terjadi kesalahan server"})
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Password lama tidak sesuai"})
+	}
+
+	// Hash new password
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal memproses password"})
+	}
+
+	user.PasswordHash = string(newHash)
+	if err := h.userRepo.UpdateProfile(c.Context(), user); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Gagal menyimpan password"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Password berhasil diperbarui"})
+}
+
 func RegisterProfileRoutes(app *fiber.App, handler *ProfileHandler, authMiddleware fiber.Handler) {
 	api := app.Group("/api/user", authMiddleware)
 	api.Get("/profile", handler.GetProfile)
 	api.Put("/profile", handler.UpdateProfile)
+	api.Put("/password", handler.ChangePassword)
 	api.Post("/avatar", handler.UploadAvatar)
 }

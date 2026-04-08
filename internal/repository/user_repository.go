@@ -109,3 +109,10 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, user *domain.User) e
 	_, err := r.db.ExecContext(ctx, query, user.Username, user.Email, user.WhatsappNumber, user.AvatarURL, user.UpdatedAt, user.ID)
 	return err
 }
+
+// UpdatePasswordHash updates only the password hash for a user
+func (r *UserRepository) UpdatePasswordHash(ctx context.Context, id uuid.UUID, hash string) error {
+	query := `UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3`
+	_, err := r.db.ExecContext(ctx, query, hash, time.Now(), id)
+	return err
+}

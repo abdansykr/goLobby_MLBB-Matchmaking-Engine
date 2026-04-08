@@ -33,8 +33,8 @@
               <span class="font-['Orbitron'] font-black text-xl gradient-text">GOLOBBY</span>
             </div>
 
-            <!-- Tab switcher -->
-            <div class="flex gap-1 p-1 bg-white/5 rounded-xl mb-6">
+            <!-- Tab switcher (hidden in forgot mode) -->
+            <div v-if="mode !== 'forgot'" class="flex gap-1 p-1 bg-white/5 rounded-xl mb-6">
               <button
                 id="auth-tab-login"
                 class="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200"
@@ -53,18 +53,28 @@
               >Daftar</button>
             </div>
 
+            <!-- Forgot mode: back button -->
+            <div v-else class="mb-4">
+              <button type="button" class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-cyan-magic-300 transition-colors" @click="switchMode('login')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Kembali ke Login
+              </button>
+            </div>
+
             <h2 class="text-2xl font-['Orbitron'] font-black text-white mb-1">
-              {{ mode === 'login' ? 'Selamat Datang' : 'Buat Akun' }}
+              {{ mode === 'login' ? 'Selamat Datang' : mode === 'register' ? 'Buat Akun' : 'Reset Password' }}
             </h2>
             <p class="text-sm text-gray-400 mb-6">
               {{ mode === 'login'
                 ? 'Login untuk melacak histori dan profil scrim kamu.'
-                : 'Bergabunglah dengan komunitas GoLobby Scrim Arena.' }}
+                : mode === 'register'
+                ? 'Bergabunglah dengan komunitas GoLobby Scrim Arena.'
+                : 'Verifikasi identitasmu dengan email & username, lalu set password baru.' }}
             </p>
           </div>
 
-          <!-- Form -->
-          <form class="px-8 pb-8 space-y-4" @submit.prevent="handleSubmit">
+          <!-- Form: Login & Register -->
+          <form v-if="mode !== 'forgot'" class="px-8 pb-8 space-y-4" @submit.prevent="handleSubmit">
 
             <!-- Username and WhatsApp (register only) -->
             <Transition name="field-slide">
@@ -149,6 +159,15 @@
               </div>
             </div>
 
+            <!-- Lupa Password (login only) -->
+            <div v-if="mode === 'login'" class="text-right -mt-2">
+              <button
+                type="button"
+                class="text-xs text-gray-500 hover:text-cyan-magic-400 transition-colors"
+                @click="switchMode('forgot')"
+              >Lupa Password?</button>
+            </div>
+
             <!-- Error / Success message -->
             <Transition name="msg-fade">
               <div v-if="message.text"
@@ -195,6 +214,90 @@
             </p>
           </form>
 
+          <!-- ── Form: Forgot Password ── -->
+          <form v-else class="px-8 pb-8 space-y-4" @submit.prevent="handleForgotSubmit">
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Email Terdaftar</label>
+              <input
+                v-model="forgotForm.email"
+                type="email"
+                placeholder="email@kamu.com"
+                class="auth-input"
+                :disabled="forgotLoading"
+                required
+              >
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Username</label>
+              <input
+                v-model="forgotForm.username"
+                type="text"
+                placeholder="Username akun kamu"
+                class="auth-input"
+                :disabled="forgotLoading"
+                required
+              >
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Password Baru</label>
+              <div class="relative">
+                <input
+                  v-model="forgotForm.newPassword"
+                  :type="showForgotPw ? 'text' : 'password'"
+                  placeholder="Min. 6 karakter"
+                  class="auth-input pr-10"
+                  :disabled="forgotLoading"
+                  required
+                >
+                <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-200 transition-colors" @click="showForgotPw = !showForgotPw" tabindex="-1">
+                  <svg v-if="!showForgotPw" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                </button>
+              </div>
+              <p v-if="forgotForm.newPassword && forgotForm.newPassword.length < 6" class="text-xs text-red-400 mt-1">⚠️ Minimal 6 karakter</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">Konfirmasi Password Baru</label>
+              <input
+                v-model="forgotForm.confirmPassword"
+                :type="showForgotPw ? 'text' : 'password'"
+                placeholder="Ulangi password baru"
+                class="auth-input"
+                :class="{'border-red-500/50': forgotForm.confirmPassword && forgotForm.confirmPassword !== forgotForm.newPassword}"
+                :disabled="forgotLoading"
+                required
+              >
+              <p v-if="forgotForm.confirmPassword && forgotForm.confirmPassword !== forgotForm.newPassword" class="text-xs text-red-400 mt-1">⚠️ Password tidak cocok</p>
+            </div>
+
+            <!-- Message -->
+            <Transition name="msg-fade">
+              <div v-if="forgotMessage.text"
+                class="flex items-start gap-2.5 p-3 rounded-xl text-sm font-medium"
+                :class="forgotMessage.type === 'error' ? 'bg-red-900/40 border border-red-700/50 text-red-300' : 'bg-emerald-900/40 border border-emerald-700/50 text-emerald-300'"
+              >
+                <svg v-if="forgotMessage.type === 'error'" class="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <svg v-else class="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                {{ forgotMessage.text }}
+              </div>
+            </Transition>
+
+            <button
+              type="submit"
+              class="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-magic shadow-glow-violet hover:shadow-glow-cyan hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="forgotLoading || forgotForm.newPassword !== forgotForm.confirmPassword || forgotForm.newPassword.length < 6"
+            >
+              <span v-if="forgotLoading" class="flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                Memproses...
+              </span>
+              <span v-else>🔐 Reset Password</span>
+            </button>
+          </form>
+
           <!-- Close button -->
           <button
             id="auth-btn-close"
@@ -224,12 +327,19 @@ const props = defineProps({
 const emit = defineEmits(['close', 'success'])
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const { login, register } = useAuth()
+const { login, register, resetPassword } = useAuth()
 const mode         = ref(props.initialMode)
 const loading      = ref(false)
 const showPassword = ref(false)
+const showForgotInfo = ref(false)
 const message      = reactive({ text: '', type: '' }) // type: 'error' | 'success'
 const form         = reactive({ username: '', email: '', password: '', whatsapp: '' })
+
+// ── Forgot Password State ─────────────────────────────────────────────────────
+const forgotLoading  = ref(false)
+const showForgotPw   = ref(false)
+const forgotMessage  = reactive({ text: '', type: '' })
+const forgotForm     = reactive({ email: '', username: '', newPassword: '', confirmPassword: '' })
 
 // ── Watchers ──────────────────────────────────────────────────────────────────
 watch(() => props.isVisible, (val) => {
@@ -280,6 +390,14 @@ const resetForm = () => {
   message.text   = ''
   message.type   = ''
   showPassword.value = false
+  // Reset forgot form too
+  forgotForm.email           = ''
+  forgotForm.username        = ''
+  forgotForm.newPassword     = ''
+  forgotForm.confirmPassword = ''
+  forgotMessage.text         = ''
+  forgotMessage.type         = ''
+  showForgotPw.value         = false
 }
 
 const setMessage = (text, type = 'error') => {
@@ -311,6 +429,29 @@ const handleSubmit = async () => {
     setMessage(err.message)
   } finally {
     loading.value = false
+  }
+}
+
+const handleForgotSubmit = async () => {
+  if (forgotLoading.value) return
+  forgotLoading.value = true
+  forgotMessage.text = ''
+
+  try {
+    await resetPassword({
+      email: forgotForm.email,
+      username: forgotForm.username,
+      newPassword: forgotForm.newPassword
+    })
+    forgotMessage.text = '🔓 Password berhasil direset! Silakan login dengan password baru.'
+    forgotMessage.type = 'success'
+    // Auto-switch to login after 2s
+    setTimeout(() => switchMode('login'), 2000)
+  } catch (err) {
+    forgotMessage.text = err.message || 'Gagal mereset password'
+    forgotMessage.type = 'error'
+  } finally {
+    forgotLoading.value = false
   }
 }
 </script>
